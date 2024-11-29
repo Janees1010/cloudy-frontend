@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { FaRegFolder } from "react-icons/fa";
 import { CiFileOn } from "react-icons/ci";
+import { useAppSelector,useAppDispatch } from "../redux/store";
+import { addChildren } from "../redux/slices/folderSclice";
+import axios from "axios"
+
 
 interface Props {
   dropdown: boolean;
@@ -15,29 +20,13 @@ declare module "react" {
   }
 }
 
-// const buidFileTreee = (files:File[])=>{
-//   try {
-//     const root:any = {}
-//     files.forEach((file)=>{
-//       let currentLevel = root
-//       const parts = file.webkitRelativePath.split("/")
-//       parts.forEach((part:string,index:number)=>{
-//          if(!currentLevel[part]){
-//             currentLevel[part] = index === parts.length-1 ? {file,type:"file"}  : {type:"folder",children:{}}
-//          }
-//          currentLevel = currentLevel[part].children || {}
-//       })
-//     })
-//     console.log(JSON.stringify(root, null, 2)); 
-//     console.log(root);  
-    
-//   } catch (error) {
-//      console.log( (error as Error).message );
-//   }
-// }
+
 
 const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
+
+  const dispatch = useAppDispatch()
   const dropdownRef = useRef<HTMLUListElement>(null);
+  const user = useAppSelector((state)=> state.user)
   const handleCreateFolder = () => {
     try {
       setIsOpenModal(true);
@@ -52,14 +41,29 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
       if (files) {
         let filesArray = Array.from(files);
         const filteredFiles = filesArray.filter(file => !file.webkitRelativePath.includes('.git'));
-        const formData = new FormData()
+        console.log(filteredFiles,"files Array");
+        let formdata = new FormData()
         filteredFiles.forEach((file) => {
-          // Append each file with its relative path (to preserve folder structure)
-          formData.append("files[]", file, file.webkitRelativePath);
+          formdata.append("files[]", file, file.webkitRelativePath);
+          formdata.append("relativePaths[]", file.webkitRelativePath);
         });
-        console.log(formData);
-        // buidFileTreee(filteredFiles)
-        setDropdown(false); // Assuming you want to close a dropdown after processing
+        axios
+        .post("http://localhost:4000/folder/upload", formdata, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          params: {
+            userId: user._id,
+            parentId: null,
+          },
+        })
+        .then((res) => {
+          console.log(res.data);
+          const payload = res.data.response
+          dispatch(addChildren(payload))
+        })
+        .catch((err) => console.log(err.message));
+         setDropdown(false); 
       }
     } catch (error) {
       console.error("Error uploading folder:", (error as Error).message);
@@ -81,6 +85,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  
 
   return (
     <ul

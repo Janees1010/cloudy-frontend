@@ -1,19 +1,35 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState,useEffect} from "react";
 import { GoPlus } from "react-icons/go";
 import { MdOutlineHome, MdFolderShared } from "react-icons/md";
 import { FiClock } from "react-icons/fi";
 import { RiDeleteBin6Line, RiDriveLine } from "react-icons/ri";
 import { TiCloudStorage } from "react-icons/ti";
-import { useAppDispatch } from "../redux/store";
+import { useAppDispatch, useAppSelector } from "../redux/store";
 import Link from "next/link";
 import FileUploadModal from "./FileUploadDropdown";
 import NewFolderModal from "./NewFolderModal";
+import useLoadUserData from "@/hooks/FetchUserData";
+import { useRouter } from "next/navigation";
+
 
 const SideBar: React.FC = () => {
-  
-   
+  const {loadUserData} = useLoadUserData()
+  // const user = useAppSelector((state)=>state.user)
+  const router = useRouter()
+  const FetchUserData = async()=>{
+    const user  =  await loadUserData();
+    if(!user.username){
+       router.push("/login")
+    }
+    console.log(user,"cdh");
+    
+  }
+  useEffect(() => {
+     FetchUserData()
+ }, [loadUserData]);
+
   const dispatch = useAppDispatch()
   const percentageUsed: number = 30;
   const [dropdown, setDropdown] = useState<boolean>(false);

@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import userSlice from "./slices/userSlices";
+import folderSlice from "./slices/folderSclice"
 
-// Configure the Redux store
+
 export const store = configureStore({
   reducer: {
     user: userSlice, // Add your slice reducer
+    parentFolder:folderSlice
   },
 });
 

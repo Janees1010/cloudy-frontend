@@ -1,24 +1,23 @@
-
 import React from "react";
 import SideBar from "../components/SideBar";
 import Navbar from "../components/Navbar";
-import useLoadUserData from "@/hooks/FetchUserData";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
-
-
   return (
-    <section className="flex">
-      <aside className="w-[25%]">
+    <section className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="w-[20%] fixed h-full z-10 bg-gray-100">
         <SideBar />
       </aside>
-      <main className="w-full">
+
+      {/* Main Content */}
+      <main className="w-[80%] ml-[19%] overflow-y-auto">
         <Navbar />
-        {children}
+        <div className="p-4">{children}</div>
       </main>
     </section>
   );
