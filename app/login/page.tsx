@@ -39,11 +39,11 @@ const Page = () => {
     }
     console.log("Form submitted:", formData);
     axios.post("http://localhost:3500/signin",{...formData}).then((res)=>{
-         console.log(res.data);
          const payload = res.data.user
          dispatch(addUser(payload))
          router.push("/home")
     }).catch((err)=>{
+        toast.error("Incorrect Email or Password");
         console.log(err.message);
     })
   };

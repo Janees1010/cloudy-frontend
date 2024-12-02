@@ -1,6 +1,10 @@
 // components/NewFolderModal.tsx
 import React, { useState } from "react";
 import ReactDOM from "react-dom"; // Import ReactDOM to create the portal
+import { useAppDispatch,useAppSelector } from "../redux/store";
+import {updateChildren} from "../redux/slices/folderSclice"
+import {toast } from "react-hot-toast";
+import axios from "axios"
 
 type Props = {
   setIsOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -8,6 +12,9 @@ type Props = {
 
 const NewFolderModal = ({ setIsOpenModal }: Props) => {
   const [folderName, setFolderName] = useState<string>("");
+  const dispatch = useAppDispatch()
+  const user = useAppSelector((state) => state.user)
+  const {parentId} = useAppSelector((state) => state.parentFolder);
 
   const handleCloseModal = () => {
     setIsOpenModal(false);
@@ -16,7 +23,17 @@ const NewFolderModal = ({ setIsOpenModal }: Props) => {
 
   const handleFolderSubmit = () => {
     console.log("Folder created:", folderName);
-    setIsOpenModal(false);
+    setIsOpenModal(false)
+    const toastId = toast.loading("creating...")
+    if(folderName){
+       axios.post("http://localhost:4000/folder/create",{name:folderName,userId:user._id,parentId}).then((res)=>{
+        if(res.data){
+           const payload = res.data.newFolder;
+           dispatch(updateChildren(payload))
+           toast.success("folder created",{id:toastId})
+        }
+       }).catch(err=>console.log(err.messaage))
+    }
     setFolderName("");
   };
 

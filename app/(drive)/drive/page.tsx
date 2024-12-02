@@ -8,8 +8,8 @@ import { IoDocumentTextOutline } from "react-icons/io5";
 import { BsThreeDots } from "react-icons/bs";
 import { addChildren } from "@/app/redux/slices/folderSclice";
 import { PiFileJs } from "react-icons/pi";
+import { FaGoogleDrive } from "react-icons/fa";
 import Loader from "@/app/components/Loader";
-
 
 export type ChildrenType = {
   _id: number;
@@ -24,23 +24,18 @@ export type ChildrenType = {
 
 const Page = () => {
   const user = useAppSelector((state) => state.user);
-  const { childrens } = useAppSelector((state) => state.parentFolder);
+  const { childrens, parentId } = useAppSelector((state) => state.parentFolder);
   const dispatch = useAppDispatch();
-  // const [childrens, setChildrens] = useState<ChildrenType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previousParentId, setPreviousParentId] = useState<number | null>();
   const [error, setError] = useState<string | null>(null);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
-  useEffect(() => {
-    if (user && user._id) {
-      fetchChildrens(null); // Fetch root folder contents
-    }
-  }, [user]);
-  
   const fetchChildrens = (parentId: number | null) => {
-     setLoading(true)
+    setLoading(true);
+    setPreviousParentId(parentId);
     axios
       .get(`${API_BASE_URL}/folder/childrens/${parentId}/${user._id}`)
       .then((res) => {
@@ -75,12 +70,23 @@ const Page = () => {
     console.log("Actions for:", id);
   };
 
+  const handlePreviousPage = () => {
+    console.log(previousParentId, "previous parent");
+  };
+
+  useEffect(() => {
+    if (user && user._id) {
+      fetchChildrens(null); // Fetch root folder contents
+    }
+  }, [user]);
   if (loading) {
-    return   <Loader size={50} color="#4A90E2"  />
+    return <Loader size={50} color="#4A90E2" />;
   }
+  console.log(parentId, "parent");
 
   return (
     <div className="p-4">
+      {/* <button onClick={handlePreviousPage}>Back</button> */}
       <h1 className="text-xl font-semibold mb-4">My Drive</h1>
       {childrens && childrens.length > 0 ? (
         <div className="overflow-x-auto">
@@ -109,17 +115,15 @@ const Page = () => {
                     role="button"
                     aria-label={`Open ${child.name}`}
                   >
-                    {child.childrenType === "folder" ? (
+                    {child.type === "folder" ? (
                       <FaFolder className="text-gray-600" />
                     ) : child.type?.startsWith("image/") ? (
                       <FaRegImage className="text-red-500" />
                     ) : child.type?.startsWith("text/") ? (
                       <IoDocumentTextOutline className="text-blue-600" />
-                    ) : child.type === "application/x-javascript"  ? 
-                    (
-                       <PiFileJs className="text-yellow-500" />
-                    ) :
-                    (
+                    ) : child.type === "application/x-javascript" ? (
+                      <PiFileJs className="text-yellow-500" />
+                    ) : (
                       <IoDocumentTextOutline className="text-blue-600" />
                     )}
                     {child.name.length > 50
@@ -144,7 +148,12 @@ const Page = () => {
           </table>
         </div>
       ) : (
-        <p className="text-gray-500">No items found in your drive.</p>
+        <div className="flex justify-center h-[50vh] items-center">
+          <p className="text-gray-500 text-xl flex items-center gap-2">
+            {" "}
+            <FaGoogleDrive /> No items found
+          </p>
+        </div>
       )}
     </div>
   );

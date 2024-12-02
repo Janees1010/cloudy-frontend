@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 const Page = () => {
   const dispatch = useAppDispatch() 
   const router = useRouter(); 
+  const [loading, setLoading] = useState(false); 
   const [formData, setFormData] = useState({
     username:"",
     email: "",
@@ -33,18 +34,17 @@ const Page = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Basic validation example
-    if (!formData.email || !formData.password || !formData.username) {
-      toast.error("All fields are required!");
-      return;
+    if(loading){
+       return
     }
-
-    // Form submission logic here
+    if (!formData.email || !formData.password || !formData.username) {
+       return  toast.error("All fields are required!");   
+    }
     console.log("Form submitted:", formData);
     try {
+      setLoading(true)
       axios.post("http://localhost:3500/signup",{...formData}).then((res)=>{
-        const payload = res.data.user
+        const payload = res.data.user  
         dispatch(addUser(payload))
         router.push("/home")
       }).catch((err)=>{

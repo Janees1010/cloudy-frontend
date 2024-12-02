@@ -12,29 +12,28 @@ import FileUploadModal from "./FileUploadDropdown";
 import NewFolderModal from "./NewFolderModal";
 import useLoadUserData from "@/hooks/FetchUserData";
 import { useRouter } from "next/navigation";
+import PreviousMap from "postcss/lib/previous-map";
 
 
 const SideBar: React.FC = () => {
-  const {loadUserData} = useLoadUserData()
-  // const user = useAppSelector((state)=>state.user)
-  const router = useRouter()
-  const FetchUserData = async()=>{
-    const user  =  await loadUserData();
-    if(!user.username){
-       router.push("/login")
-    }
-    console.log(user,"cdh");
-    
-  }
-  useEffect(() => {
-     FetchUserData()
- }, [loadUserData]);
-
+ 
   const dispatch = useAppDispatch()
   const percentageUsed: number = 30;
   const [dropdown, setDropdown] = useState<boolean>(false);
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
-    
+  const initialActiveLink = {
+    home:false,
+    myDrive:false,
+    recent:false,
+  }
+  const [activeLink,setActiveLink] = useState(initialActiveLink)
+    const handleActiveLink = (currentLink:string)=>{
+         setActiveLink(initialActiveLink)
+         setActiveLink({
+          ...initialActiveLink,
+          [currentLink]: true, // Dynamically update the current link to true
+        });
+    }
 
   return (
     <div className="w-full pt-3 px-7 h-screen bg-gray-50">
@@ -63,17 +62,19 @@ const SideBar: React.FC = () => {
       {/* Dashboard Links */}
       <div className="mt-4 flex flex-col gap-3">
         <Link
+          onClick={()=>handleActiveLink("home")}
           href="/home"
-          className="flex items-center gap-3 text-md p-2 rounded-lg text-gray-700 hover:text-blue-500 hover:bg-gray-100 active:text-white active:bg-blue-500"
+          className={`${activeLink.home ? "bg-gray-100 text-blue-500" : " text-gray-700"} flex items-center gap-3 text-md p-2 rounded-lg hover:text-blue-500 hover:bg-gray-100`}
         >
           <MdOutlineHome className="text-xl" /> Home
         </Link>
         <Link
+          onClick={()=>handleActiveLink("myDrive")}
           href="/drive"
-          className="flex items-center gap-3 text-md p-2 rounded-lg text-gray-700 hover:text-blue-500 hover:bg-gray-100 active:text-white active:bg-blue-500"
+          className={`${activeLink.myDrive ? "bg-gray-100 text-blue-500" : "text-gray-700"} flex items-center gap-3 text-md p-2 rounded-lg hover:text-blue-500 hover:bg-gray-100`}
         >
           <RiDriveLine className="text-xl" /> My Drive
-        </Link>
+        </Link> 
       </div>
       <hr className="mt-3" />
 
