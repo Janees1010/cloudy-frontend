@@ -10,9 +10,6 @@ import { useAppDispatch, useAppSelector } from "../redux/store";
 import Link from "next/link";
 import FileUploadModal from "./FileUploadDropdown";
 import NewFolderModal from "./NewFolderModal";
-import useLoadUserData from "@/hooks/FetchUserData";
-import { useRouter } from "next/navigation";
-import PreviousMap from "postcss/lib/previous-map";
 
 
 const SideBar: React.FC = () => {
@@ -23,7 +20,7 @@ const SideBar: React.FC = () => {
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const initialActiveLink = {
     home:false,
-    myDrive:false,
+    drive:false,
     recent:false,
   }
   const [activeLink,setActiveLink] = useState(initialActiveLink)
@@ -33,6 +30,7 @@ const SideBar: React.FC = () => {
           ...initialActiveLink,
           [currentLink]: true, // Dynamically update the current link to true
         });
+      
     }
 
   return (
@@ -69,9 +67,9 @@ const SideBar: React.FC = () => {
           <MdOutlineHome className="text-xl" /> Home
         </Link>
         <Link
-          onClick={()=>handleActiveLink("myDrive")}
           href="/drive"
-          className={`${activeLink.myDrive ? "bg-gray-100 text-blue-500" : "text-gray-700"} flex items-center gap-3 text-md p-2 rounded-lg hover:text-blue-500 hover:bg-gray-100`}
+          onClick={()=>handleActiveLink("drive")}
+          className={`${activeLink.drive ? "bg-gray-100 text-blue-500" : "text-gray-700"} flex items-center gap-3 text-md p-2 rounded-lg hover:text-blue-500 hover:bg-gray-100`}
         >
           <RiDriveLine className="text-xl" /> My Drive
         </Link> 
@@ -80,14 +78,16 @@ const SideBar: React.FC = () => {
 
       <div className="mt-4 flex flex-col gap-3">
         <Link
+          onClick={()=>handleActiveLink("drive")}
           href="/shared"
           className="flex items-center gap-3 text-md p-2 rounded-lg text-gray-700 hover:text-blue-500 hover:bg-gray-100 active:text-white active:bg-blue-500"
         >
           <MdFolderShared className="text-xl" /> Shared with me
         </Link>
         <Link
+          onClick={()=>handleActiveLink("recent")}
           href="/recent"
-          className="flex items-center gap-3 text-md p-2 rounded-lg text-gray-700 hover:text-blue-500 hover:bg-gray-100 active:text-white active:bg-blue-500"
+          className={`${activeLink.recent ? "bg-gray-100 text-blue-500" : "text-gray-700"} flex items-center gap-3 text-md p-2 rounded-lg text-gray-700 hover:text-blue-500 hover:bg-gray-100`}
         >
           <FiClock className="text-xl" /> Recent
         </Link>

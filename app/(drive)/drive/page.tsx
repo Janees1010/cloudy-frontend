@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useAppDispatch, useAppSelector } from "@/app/redux/store";
 import { FaFolder, FaRegImage } from "react-icons/fa";
@@ -27,42 +27,45 @@ const Page = () => {
   const { childrens, parentId } = useAppSelector((state) => state.parentFolder);
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
-  const [previousParentId, setPreviousParentId] = useState<number | null>();
+  // const [previousParentId, setPreviousParentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
-  const fetchChildrens = (parentId: number | null) => {
-    setLoading(true);
-    setPreviousParentId(parentId);
-    axios
-      .get(`${API_BASE_URL}/folder/childrens/${parentId}/${user._id}`)
-      .then((res) => {
-        const payload = {
-          parentId,
-          childrens: res.data.childrens,
-        };
-        dispatch(addChildren(payload));
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  };
+    const fetchChildrens = useCallback((parentId: number | null) => {
+      setLoading(true);
+      axios
+        .get(`${API_BASE_URL}/folder/childrens/${parentId}/${user._id}`)
+        .then((res) => {
+          const payload = {
+            parentId,
+            childrens: res.data.childrens,
+          };
+          dispatch(addChildren(payload));
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setLoading(false);
+        });
+    }, [user._id]); 
 
   const openFile = (
     e: React.MouseEvent,
     id: number,
     type: string,
-    url?: string
-  ) => {
+    url?: string,
+  ) => {  
     e.preventDefault();
     if (type !== "folder" && url) {
-      window.open(url, "_blank");
+      axios.get("http://localhost:4000/file/update-LastAcceseed",{params:{userId:user._id,fileId:id}}).then((res)=>{
+        window.open(url, "_blank");
+      }).catch(err=>console.log(err.message))
       return;
     }
+    console.log(parentId,"parent");
+    
     fetchChildrens(id);
   };
 
@@ -71,22 +74,29 @@ const Page = () => {
   };
 
   const handlePreviousPage = () => {
-    console.log(previousParentId, "previous parent");
+    axios.get("http://localhost:4000/file/getParentId",{
+      params:{
+        parentId:parentId,
+        userId:user._id
+      }}).then((res)=>{
+        if(res.data){
+           fetchChildrens(res.data.parentId)
+        }
+    }).catch((err)=>console.log(err.message))    
+   
   };
 
   useEffect(() => {
-    if (user && user._id) {
-      fetchChildrens(null); // Fetch root folder contents
-    }
-  }, [user]);
+      fetchChildrens(null); // Fetch root folder contents   
+  }, [fetchChildrens]);
+  
   if (loading) {
     return <Loader size={50} color="#4A90E2" />;
   }
-  console.log(parentId, "parent");
 
   return (
     <div className="p-4">
-      {/* <button onClick={handlePreviousPage}>Back</button> */}
+      <button onClick={handlePreviousPage}>Back</button>
       <h1 className="text-xl font-semibold mb-4">My Drive</h1>
       {childrens && childrens.length > 0 ? (
         <div className="overflow-x-auto">
@@ -109,7 +119,7 @@ const Page = () => {
                 >
                   <td
                     onClick={(e) =>
-                      openFile(e, child._id, child.childrenType, child.s3Url)
+                      openFile(e, child._id, child.childrenType,child.s3Url)
                     }
                     className="flex font-medium cursor-pointer text-gray-800 border-gray-300 px-4 items-center gap-2 py-2"
                     role="button"
