@@ -44,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
       <main className="w-[80%] ml-[19%] overflow-y-auto">
         <Navbar />
         <Toaster />
-        <div className="p-4">{children}</div>
+        <div className="p-4 ">{children}</div>
       </main>
     </section>
   );

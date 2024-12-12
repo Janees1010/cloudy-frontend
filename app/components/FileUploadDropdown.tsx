@@ -5,12 +5,21 @@ import { toast, Toaster } from "react-hot-toast";
 import axios from "axios";
 import { FaRegFolder } from "react-icons/fa";
 import { CiFileOn } from "react-icons/ci";
+import { sign } from "crypto";
 
 
 interface Props {
   dropdown: boolean;
   setDropdown: React.Dispatch<React.SetStateAction<boolean>>;
   setIsOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+interface FileWithUrl extends File {
+  uploadedUrl?: string;  // Add uploadedUrl as an optional property
+}
+
+interface presignedUrl {
+  url:string
 }
 
 declare module "react" {
@@ -33,50 +42,76 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
       console.error("Error opening modal:", (error as Error).message);
     }
   };
-
-  const handleUploadFolder = (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+  const getPreSignedUrl = async (fileArray: File[]) => {
+    const filteredArray = fileArray.map((file) => ({
+      name: file.name,
+      webkitRelativePath: file.webkitRelativePath,
+      type: file.type,
+      size:file.size
+    }));
+  
+    try {
+      const response = await axios.post("http://localhost:4000/file/getPresignedUrl", {
+        files: filteredArray,
+      });
+      return response.data; // Ensures the resolved data is returned
+    } catch (err) {
+      console.log( (err as Error).message);
+      throw err; // Re-throws the error to allow calling code to handle it
+    }
+  };
+  
+  const handleUploadFolder = async(e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const files = e.target.files;
       if (files) {
-        const uploadToastId = toast.loading("Uploading folder...");
+        // const uploadToastId = toast.loading("Uploading folder...");
         let filesArray = Array.from(files);
-        const filteredFiles = filesArray.filter(
-          (file) => !file.webkitRelativePath.includes(".git") || !file.webkitRelativePath.includes("node_modules")
-        );
-        let formdata = new FormData();
-        filteredFiles.forEach((file) => {
-          formdata.append("files[]", file, file.webkitRelativePath);
-          formdata.append("relativePaths[]", file.webkitRelativePath);
-        });
-        axios
-          .post("http://localhost:4000/folder/upload", formdata, {
-            headers: { "Content-Type": "multipart/form-data" },
-            params: { userId: user._id, parentId },
-            onUploadProgress: (data)=>{
-                console.log(data.loaded, data.total);
-            },
-          })
-          .then((res) => {
-            const payload = res.data.response;
-            dispatch(addChildren(payload));
-            toast.success("Upload successful!", { id: uploadToastId });
-          })
-          .catch((err) => {
-            toast.error("Upload failed!", { id: uploadToastId });
-          })
-          .finally(() => setDropdown(false));
-      }
+        const filteredFiles:FileWithUrl[] = filterFiles(filesArray)
+        if(filteredFiles.length){
+           let signedUrls = await getPreSignedUrl(filteredFiles)
+            await Promise.allSettled(
+              signedUrls.map((obj: presignedUrl, index: number) => {
+              return  axios({
+                method:"PUT",
+                url:obj.url,
+                headers:{ 'Content-Type' :filteredFiles[index].type},
+                data:filteredFiles[index],
+                withCredentials:false
+              }).then((res) => {
+                  let imageLocation  = obj.url.split("?")[0]
+                  const url = imageLocation.split("/uploads")[1]
+                  signedUrls[index].url = `/uploads${url}`
+                  filteredFiles[index].uploadedUrl = `/uploads${url}`
+                })
+                .catch((error) => {
+                  console.error("Error uploading file:", error.response?.data || error.message);
+                });
+            })
+          );
+           console.log(filteredFiles);
+           console.log(signedUrls,"signed");
+           
+           axios.post("http://localhost:4000/folder/upload",{filteredFiles})
+        }
+     }
     } catch (error) {
       console.error("Error uploading folder:", (error as Error).message);
     }
   };
 
+  const filterFiles = (files: File[]): File[] =>
+    files.filter(
+      (file) =>
+        !file.webkitRelativePath.includes(".git") &&
+        !file.webkitRelativePath.includes("node_modules")
+    );
+
   const handleUploadFile = (e:React.ChangeEvent<HTMLInputElement>)=>{
      try {
          let file = e.target.files
          if(file){
-           console.log(file);
-          
            const uploadToastId = toast.loading("Uploading file...");
            let formdata = new FormData();
            formdata.append("file",file[0]);
@@ -104,8 +139,6 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
      }
   }
   
-  
-
   const handleClickOutside = (e: MouseEvent) => {
     if (!dropdownRef.current?.contains(e.target as Node)) {
       setDropdown(false);

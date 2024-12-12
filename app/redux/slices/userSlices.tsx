@@ -19,12 +19,9 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     addUser: (state, action: PayloadAction<UserState>) => {
-      state._id = action.payload._id;
-      state.username = action.payload.username;
-      state.email = action.payload.email;
-      state.password = action.payload.password;
+      console.log(action.payload);
+      return action.payload;
     },
-    // Example: Adding a clear user action
     clearUser: (state) => {
       state._id = "";
       state.username = "";

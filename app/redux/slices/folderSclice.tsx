@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ChildrenType } from "@/app/(drive)/drive/page";
-import { userSlice } from "./userSlices";
+
 
 interface initialStateType {
   parentId: string;
@@ -23,8 +23,11 @@ const folderSlice = createSlice({
     updateChildren: (state, action) => {
       state.childrens.push(action.payload);
     },
+    removeChildren:(state,action)=>{
+      state.childrens = state.childrens.filter((child)=> child._id != action.payload.id)
+    }
   },
 });
 
-export const { addChildren, updateChildren } = folderSlice.actions;
+export const { addChildren, updateChildren,removeChildren } = folderSlice.actions;
 export default folderSlice.reducer;
