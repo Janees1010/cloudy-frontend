@@ -9,6 +9,13 @@ export interface RecentFiles {
     lastMonth:FileData[]
 }
 
+export interface binType {
+    _id:number
+    name:string,
+    size:number,
+    type:string
+}
+
 export interface FileData {
     _id:number,
     name: string,
@@ -18,5 +25,21 @@ export interface FileData {
     userId:string,
     s3Url:string,
     lastAccessed:string
+  }
+
+  export interface UserType  {
+    _id:string,
+    username:string,
+    email:string,
+  }
+
+  export interface SharedFiles {
+    _id:string,
+    name:string,
+    owner:string,
+    type:string,
+    createdAt:string,
+    s3Url:string,
+    size:number
   }
   

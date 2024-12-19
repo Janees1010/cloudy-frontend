@@ -1,25 +1,62 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { IoMdClose } from "react-icons/io";
+import axios from "axios";
+import { UserType } from "../types/types";
+import { useAppSelector } from "../redux/store";
+import {toast} from "react-hot-toast"
 
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  id:number;
+  type:string | undefined,
+  name:string
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [allUsers] = useState([
-    "Alice",
-    "Bob",
-    "Charlie",
-    "David",
-    "Eve",
-    "Frank",
-  ]); // Mock users list
+const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose,id,type,name}) => {
 
-  // Handle adding/removing users
-  const handleUserSelect = (user: string) => {
+  const user = useAppSelector((state)=>state.user)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<UserType[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]); // Holds the users matching the search query
+
+  // Mock API call to simulate fetching users
+  const fetchUsers = async (query: string) => {
+    // Simulate an API call delay
+    const {data}  =  await axios.get(`http://localhost:3500/user/search/${query}`)
+    console.log(data,"search");
+    return data
+  };
+  const handleShare = async()=>{      
+     try {
+        const uploadToastId = toast.loading("sharing...");
+        const receivers = selectedUsers.map((user)=>{
+          return user._id 
+        })
+        console.log(receivers);
+        console.log(name,"name");
+        const {data} = await axios.post("http://localhost:4000/file/share",{userId:user._id,id,receivers,type,name})
+        onClose()
+        toast.success("successfully shared", { id: uploadToastId });
+     } catch (error) {
+        console.log((error as Error).message); 
+     }
+  }
+  // Fetch users when searchQuery changes
+  useEffect(() => {
+    const fetchData = async () => {
+      if (searchQuery.trim()) {
+        const users = await fetchUsers(searchQuery);
+        setFilteredUsers(users);
+      } else {
+        setFilteredUsers([]);
+      }
+    };
+
+    fetchData();
+  }, [searchQuery]);
+
+  const handleUserSelect = (user:UserType) => {
     if (selectedUsers.includes(user)) {
       setSelectedUsers(selectedUsers.filter((u) => u !== user));
     } else {
@@ -27,12 +64,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // Filtered users based on search query
-  const filteredUsers = allUsers.filter((user) =>
-    user.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (!isOpen) return null; // Prevent rendering when modal is closed
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
@@ -60,26 +92,26 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Search Results */}
-        <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-md p-2">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user, index) => (
+        {filteredUsers.length > 0 ? (
+          <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-md p-2">
+            {filteredUsers.map((user, index) => (
               <div
                 key={index}
                 className="flex justify-between items-center py-1 px-2 hover:bg-gray-100 cursor-pointer rounded-md"
                 onClick={() => handleUserSelect(user)}
               >
-                <span className="text-sm text-gray-700">{user}</span>
+                <span className="text-md text-gray-700">{user.username}</span>
                 {selectedUsers.includes(user) && (
                   <span className="text-blue-500 text-xs font-semibold">
                     Selected
                   </span>
                 )}
               </div>
-            ))
-          ) : (
-            <p className="text-sm text-gray-500 text-center">No users found.</p>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : searchQuery ? (
+          <p className="text-sm text-gray-500 text-center">No users found.</p>
+        ) : null}
 
         {/* Selected Users */}
         {selectedUsers.length > 0 && (
@@ -91,14 +123,14 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
               {selectedUsers.map((user, index) => (
                 <span
                   key={index}
-                  className="flex items-center bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs font-semibold"
+                  className="flex items-center bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-sm font-semibold"
                 >
-                  {user}
+                  {user.username}
                   <button
                     className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
                     onClick={() => handleUserSelect(user)}
                   >
-                    ✖
+                    <IoMdClose />
                   </button>
                 </span>
               ))}
@@ -116,7 +148,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
           </button>
           <button
             className="bg-blue-500 hover:bg-blue-600 text-white rounded-md py-2 px-4 focus:outline-none"
-            onClick={() => alert(`Shared with: ${selectedUsers.join(", ")}`)}
+            onClick={handleShare}
           >
             Share
           </button>

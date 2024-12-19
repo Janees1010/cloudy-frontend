@@ -7,7 +7,6 @@ import { FaRegFolder } from "react-icons/fa";
 import { CiFileOn } from "react-icons/ci";
 import { sign } from "crypto";
 
-
 interface Props {
   dropdown: boolean;
   setDropdown: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,12 +14,14 @@ interface Props {
 }
 
 interface FileWithUrl extends File {
-  uploadedUrl?: string;  // Add uploadedUrl as an optional property
+  url?: string; // Add uploadedUrl as an optional property
 }
 
 interface presignedUrl {
-  url:string
+  url: string;
 }
+
+// interface  = 
 
 declare module "react" {
   interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
@@ -32,7 +33,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
   const dispatch = useAppDispatch();
   const dropdownRef = useRef<HTMLUListElement>(null);
   const user = useAppSelector((state) => state.user);
-  const {parentId = null} = useAppSelector((state) => state.parentFolder)
+  const { parentId = null } = useAppSelector((state) => state.parentFolder);
 
   const handleCreateFolder = () => {
     try {
@@ -42,60 +43,91 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
       console.error("Error opening modal:", (error as Error).message);
     }
   };
-  
+
   const getPreSignedUrl = async (fileArray: File[]) => {
     const filteredArray = fileArray.map((file) => ({
       name: file.name,
       webkitRelativePath: file.webkitRelativePath,
       type: file.type,
-      size:file.size
+      size: file.size,
     }));
-  
     try {
-      const response = await axios.post("http://localhost:4000/file/getPresignedUrl", {
-        files: filteredArray,
-      });
+      const response = await axios.post(
+        "http://localhost:4000/file/getPresignedUrl",
+        {
+          files: filteredArray,
+        }
+      );
       return response.data; // Ensures the resolved data is returned
     } catch (err) {
-      console.log( (err as Error).message);
+      console.log((err as Error).message);
       throw err; // Re-throws the error to allow calling code to handle it
     }
   };
-  
-  const handleUploadFolder = async(e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const files = e.target.files;
-      if (files) {
-        // const uploadToastId = toast.loading("Uploading folder...");
-        let filesArray = Array.from(files);
-        const filteredFiles:FileWithUrl[] = filterFiles(filesArray)
-        if(filteredFiles.length){
-           let signedUrls = await getPreSignedUrl(filteredFiles)
-            await Promise.allSettled(
-              signedUrls.map((obj: presignedUrl, index: number) => {
-              return  axios({
-                method:"PUT",
-                url:obj.url,
-                headers:{ 'Content-Type' :filteredFiles[index].type},
-                data:filteredFiles[index],
-                withCredentials:false
-              }).then((res) => {
-                  let imageLocation  = obj.url.split("?")[0]
-                  const url = imageLocation.split("/uploads")[1]
-                  signedUrls[index].url = `/uploads${url}`
-                  filteredFiles[index].uploadedUrl = `/uploads${url}`
+
+  const uploadFileToS3 = async(signedUrls:FileWithUrl[],filteredFiles:File[])=>{
+      try {
+         if(!filteredFiles.length || !signedUrls.length) throw new Error("signedUrl or files not sended")
+          await Promise.allSettled(
+            signedUrls.map((obj:FileWithUrl, index: number) => {
+              return axios({
+                method: "PUT",
+                url: obj.url,
+                headers: { "Content-Type": filteredFiles[index].type },
+                data: filteredFiles[index],
+                withCredentials: false,
+              })
+                .then((res) => {
+                  let imageLocation = obj.url?.split("?")[0];
+                  const url = imageLocation?.split("/uploads")[1];
+                  signedUrls[index].url = `/uploads${url}`;
                 })
                 .catch((error) => {
-                  console.error("Error uploading file:", error.response?.data || error.message);
+                  console.error(
+                    "Error uploading file:",
+                    error.response?.data || error.message
+                  );
                 });
             })
           );
-           console.log(filteredFiles);
-           console.log(signedUrls,"signed");
-           
-           axios.post("http://localhost:4000/folder/upload",{filteredFiles})
+          return signedUrls
+      } catch (error) {
+          throw new Error( (error as Error ).message)
+      }
+  }
+
+  const handleUploadFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const files = e.target.files;
+      setDropdown(false);
+      if (files) {
+        const uploadToastId = toast.loading("Uploading folder...");
+
+        let filesArray = Array.from(files);
+        const filteredFiles = filterFiles(filesArray);
+
+        if (filteredFiles.length) {
+          let signedUrls = await getPreSignedUrl(filteredFiles);
+          let files = await uploadFileToS3(signedUrls,filteredFiles)
+          axios
+            .post(
+              "http://localhost:4000/folder/upload",
+              {
+                files,
+              },
+              { params: { userId: user._id, parentId } }
+            )
+            .then((res) => {
+              const payload = res.data.response;
+              dispatch(addChildren(payload));
+              toast.success("Upload successful!", { id: uploadToastId });
+            })
+            .catch((err) => {
+              console.log(err.message);
+              toast.error("Something went Wrong!", { id: uploadToastId });
+            });
         }
-     }
+      }
     } catch (error) {
       console.error("Error uploading folder:", (error as Error).message);
     }
@@ -108,37 +140,40 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
         !file.webkitRelativePath.includes("node_modules")
     );
 
-  const handleUploadFile = (e:React.ChangeEvent<HTMLInputElement>)=>{
-     try {
-         let file = e.target.files
-         if(file){
-           const uploadToastId = toast.loading("Uploading file...");
-           let formdata = new FormData();
-           formdata.append("file",file[0]);
-           axios
-             .post("http://localhost:4000/file/upload", formdata, {
-               headers: { "Content-Type": "multipart/form-data" },
-               params: { userId: user._id, parentId },
-               onUploadProgress: (data)=>{
-                   console.log(data.loaded, data.total);
-               },
-             })
-             .then((res) => {
-               const payload = res.data.response;
-               console.log(payload);
-               dispatch(addChildren(payload));
-               toast.success("Upload successful!", { id: uploadToastId });
-             })
-             .catch((err) => {
-               toast.error("Upload failed!", { id: uploadToastId });
-             })
-             .finally(() => setDropdown(false));
-         }
-     } catch (error) {
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      let file = e.target.files;
+      if (file) {
+        const uploadToastId = toast.loading("Uploading file...");
+        const fileArr = Array.from(file);
+        const presignedUrl = await getPreSignedUrl(fileArr);
+        const uploadedFiles = await uploadFileToS3(presignedUrl,fileArr)
+
+        if(uploadedFiles.length){
+           axios.post("http://localhost:4000/file/upload",{file:uploadedFiles},{
+            params:{
+              userId:user._id,
+              parentId
+            }
+          }).then((res)=>{
+            setDropdown(false)
+            console.log(res,"response");
+            const payload = res.data.response;
+            console.log(res.data);
+            dispatch(addChildren(payload))
+            toast.success("Upload successful!", { id: uploadToastId });
+          }).catch((err)=>{
+             setDropdown(false)
+             toast.success("Error uploading", { id: uploadToastId });
+             throw new Error(err)
+          })
+        }
+      }
+    } catch (error) {
       console.error("Error uploading folder:", (error as Error).message);
-     }
-  }
-  
+    }
+  };
+
   const handleClickOutside = (e: MouseEvent) => {
     if (!dropdownRef.current?.contains(e.target as Node)) {
       setDropdown(false);
@@ -146,7 +181,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
   };
 
   useEffect(() => {
-      document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };

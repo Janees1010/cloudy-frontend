@@ -5,10 +5,9 @@ import axios from "axios";
 import { useAppDispatch, useAppSelector } from "@/app/redux/store";
 import { FaFolder, FaRegImage } from "react-icons/fa";
 import { IoDocumentTextOutline } from "react-icons/io5";
-
-import { addChildren } from "@/app/redux/slices/folderSclice";
 import { PiFileJs } from "react-icons/pi";
 import { FaGoogleDrive } from "react-icons/fa";
+import { addChildren } from "@/app/redux/slices/folderSclice";
 import Loader from "@/app/components/Loader";
 import { GrLinkPrevious } from "react-icons/gr";
 import ActionDropdown from "@/app/components/ActionDropdown";
@@ -21,7 +20,7 @@ export type ChildrenType = {
   childrenType: string;
   parentId: number;
   userId: number;
-  s3Url?: string;
+  s3Url: string;
 };
 
 const Page = () => {
@@ -30,10 +29,10 @@ const Page = () => {
   const { childrens, parentId } = useAppSelector((state) => state.parentFolder);
   const [loading, setLoading] = useState(true);
   const [actionDropdown, setActionDropDown] = useState(false);
-  
+
   // Refs for button (three dots) and dropdown
-  const dropdownRef = useRef<HTMLUListElement>(null); 
-  const buttonRef = useRef<HTMLButtonElement>(null); 
+  const dropdownRef = useRef<HTMLUListElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
@@ -42,7 +41,13 @@ const Page = () => {
     (parentId: number | null) => {
       setLoading(true);
       axios
-        .get(`${API_BASE_URL}/folder/childrens/${parentId}/${user._id}`)
+        .get(`${API_BASE_URL}/folder/childrens`, {
+          params: {
+            parentId,
+            userId: user._id,
+            type: "drive",
+          },
+        })
         .then((res) => {
           const payload = {
             parentId,
@@ -71,7 +76,8 @@ const Page = () => {
           params: { userId: user._id, fileId: id },
         })
         .then((res) => {
-          window.open(url, "_blank");
+          console.log(process.env.NEXT_PUBLIC_S3_LOCATION,"location");
+          window.open(process.env.NEXT_PUBLIC_S3_LOCATION+url, "_blank");
         })
         .catch((err) => console.log(err.message));
       return;
@@ -97,23 +103,6 @@ const Page = () => {
       .catch((err) => console.log(err.message));
   };
 
-  // Close dropdown if clicked outside
-  // useEffect(() => {
-  //   const handleClickOutside = (e: MouseEvent) => {
-  //     if (
-  //       buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
-  //       dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
-  //     ) {
-  //       setActionDropDown(false); // Close dropdown if clicked outside
-  //     }
-  //   };
-
-  //   document.addEventListener("click", handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener("click", handleClickOutside); // Cleanup on unmount
-  //   };
-  // }, []);
-
   useEffect(() => {
     fetchChildrens(null); // Fetch root folder contents
   }, [fetchChildrens]);
@@ -127,25 +116,31 @@ const Page = () => {
       <h1 className="mx-2 mt-3 mb-7 text-gray-700 text-2xl font-md">
         My Drive
       </h1>
-      <button
-        className="py-[2px] mx-3 px-3 border border-1 border-gray-300 rounded-md"
-        onClick={handlePreviousPage}
-      >
-        <GrLinkPrevious className="text-xl text-blue-500" />
-      </button>
-      {childrens && childrens.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border-gray-300">
-            <thead>
-              <tr className="border-b">
-                <th className="px-4 py-2 text-left font-medium">Name</th>
-                <th className="px-4 py-2 text-left font-medium">Type</th>
-                <th className="px-4 py-2 text-left font-medium">Size (KB)</th>
-                <th className="px-4 py-2 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {childrens.map((child) => (
+
+      {parentId != null ? (
+        <button
+          className="py-[2px] mx-3 px-3 border border-1 border-gray-300 rounded-md"
+          onClick={handlePreviousPage}
+        >
+          <GrLinkPrevious className="text-xl text-blue-500" />
+        </button>
+      ) : (
+        ""
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse border-gray-300">
+          <thead>
+            <tr className="border-b">
+              <th className="px-4 py-2 text-left font-medium">Name</th>
+              <th className="px-4 py-2 text-left font-medium">Type</th>
+              <th className="px-4 py-2 text-left font-medium">Size (KB)</th>
+              <th className="px-4 py-2 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {childrens && childrens.length > 0 ? (
+              childrens.map((child) => (
                 <tr
                   key={child._id}
                   className={`border-b ${
@@ -182,20 +177,32 @@ const Page = () => {
                     {child.size ? (child.size / 1024).toFixed(2) : "-"}
                   </td>
                   <td className="cursor-pointer border-gray-300 px-4 py-2">
-                      <ActionDropdown id={child._id} />
+                    <ActionDropdown
+                      s3Url={child.s3Url}
+                      id={child._id}
+                      type={child.type}
+                      name={child.name}
+                    />
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="flex justify-center h-[50vh] items-center">
-          <p className="text-gray-500 text-xl flex items-center gap-2">
-            <FaGoogleDrive /> No items found
-          </p>
-        </div>
-      )}
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="justify-center h-[65vh] items-center text-center"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <FaGoogleDrive className="w-[100px] h-[450px] text-blue-500" />
+                    {/* <span className="text-gray-700 text-xl font-md">Drive is Empty</span> */}
+                    {/* <RiDeleteBin2Line className="w-[100px] h-[450px] text-red-500" />  */}
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

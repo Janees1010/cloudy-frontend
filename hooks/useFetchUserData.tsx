@@ -18,11 +18,7 @@ const useLoadUserData = () => {
       console.error("Error fetching user data:", err.response?.data || err.message);
       return null;
     }
-  }, [dispatch]);
-
-  useEffect(() => {
-    loadUserData();
-  }, [loadUserData]);
+  }, [dispatch]);      
 
   return { loadUserData };
 };

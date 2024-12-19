@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { IoShareOutline, IoDownloadOutline } from "react-icons/io5";
-import { BsThreeDots } from "react-icons/bs";
+import { IoShareOutline } from "react-icons/io5";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { BsThreeDots,BsDownload } from "react-icons/bs";
 import { useAppSelector, useAppDispatch } from "../redux/store";
 import { removeChildren } from "../redux/slices/folderSclice";
 import axios from "axios";
@@ -9,9 +9,12 @@ import ShareModal from "./ShareModal";
 
 interface Props {
   id: number;
+  type: string | undefined;
+  name: string;
+  s3Url: string;
 }
 
-const ActionDropdown = ({ id }: Props) => {
+const ActionDropdown = ({ id, type, name, s3Url }: Props) => {
   const { childrens } = useAppSelector((state) => state.parentFolder);
   const dispatch = useAppDispatch();
   const dropdownRef = useRef<HTMLUListElement>(null);
@@ -22,7 +25,7 @@ const ActionDropdown = ({ id }: Props) => {
   const handleMoveToBin = () => {
     console.log("moving to bin ...");
     axios
-      .post("http://localhost:4000/file/moveToBin", { id })
+      .post("http://localhost:4000/file/moveToBin", { id, type, name })
       .then((res) => {
         const payload = { id };
         dispatch(removeChildren(payload));
@@ -41,8 +44,51 @@ const ActionDropdown = ({ id }: Props) => {
       setDropDown(false); // Close dropdown if clicked outside
     }
   };
-  console.log(shareModal);
 
+  // Handle file download
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link behavior
+  
+    const downloadUrl = `${process.env.NEXT_PUBLIC_S3_LOCATION}${s3Url}`;
+  
+    try {
+      // Fetch the file as a Blob
+      const response = await fetch(downloadUrl);
+      
+      // Check if the response is successful
+      if (!response.ok) {
+        throw new Error("Failed to fetch file");
+      }
+  
+      // Convert the response to a Blob
+      const blob = await response.blob();
+     
+      // Create a Blob URL from the Blob
+      const blobUrl = URL.createObjectURL(blob);
+  
+      // Create a hidden anchor element to trigger the download
+      const downloadLink = document.createElement("a");
+      downloadLink.href = blobUrl;
+      downloadLink.setAttribute("download", name);
+      downloadLink.download = name; // Optional: Set file name if not provided
+      downloadLink.style.display = "none"; // Make sure it's hidden from the UI
+  
+      // Append the anchor to the body
+      document.body.appendChild(downloadLink);
+  
+      // Trigger the download
+      downloadLink.click();
+  
+      // Clean up the Blob URL after the download
+      URL.revokeObjectURL(blobUrl);
+  
+      // Remove the anchor from the DOM
+      document.body.removeChild(downloadLink);
+    } catch (error) {
+      console.error("Error during download:", (error as Error).message);
+    }
+  };
+  
   // Add event listener for clicks outside the dropdown and button
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -78,8 +124,11 @@ const ActionDropdown = ({ id }: Props) => {
           </li>
 
           <li>
-            <button className="flex items-center !bg-white hover:bg-gray-100 active:bg-gray-200 focus:outline-none gap-2 text-md font-sm text-gray-700">
-              <IoDownloadOutline className="text-[17px]" /> Download
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-2 hover:bg-gray-100 bg-white active:!bg-white focus:outline-none text-md font-sm text-gray-700 rounded-md"
+            > <BsDownload className="text-[17px]" />
+              Download
             </button>
           </li>
           <hr />
@@ -98,6 +147,9 @@ const ActionDropdown = ({ id }: Props) => {
       {/* Share Modal */}
       {shareModal && (
         <ShareModal
+          name={name}
+          type={type}
+          id={id}
           isOpen={shareModal}
           onClose={() => setShareModal(false)} // Close modal
         />
