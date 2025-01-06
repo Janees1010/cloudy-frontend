@@ -1,5 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
 import axios from "axios";
 import { useAppSelector } from "@/app/redux/store";
 import { SharedFiles } from "@/app/types/types";
@@ -13,23 +15,18 @@ import { log } from "node:console";
 
 const page = () => {
   const user = useAppSelector((state) => state.user);
+
+  const searchParams = useSearchParams();
+  
+  const parentIdParam = searchParams.get('parentIdParam'); // Get the parentId query param
+
+
+ 
   const [sharedFiles, setSharedFiles] = useState<SharedFiles[]>([]);
   const [parentId, setParentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // const fetchSharedFiles = async () => {
-  //   try {
-  //     const { data } = await axios.get("http://localhost:4000/file/shared", {
-  //       params: {
-  //         userId: user._id,
-  //       },
-  //     });
-  //     console.log(data, "data");
-  //     setSharedFiles(data);
-  //   } catch (error) {
-  //     console.log((error as Error).message);
-  //   }
-  // };
+ 
+ 
 
   const handlePreviousPage = () => {
     axios
@@ -48,7 +45,7 @@ const page = () => {
   };
 
   const fetchData = useCallback(
-    (parentId: string | null) => {
+    (parentId: string | null ) => {
       setLoading(true);
       axios
         .get("http://localhost:4000/folder/childrens", {
@@ -96,6 +93,9 @@ const page = () => {
   };
 
   useEffect(() => {
+    if(parentIdParam){
+       setParentId(parentIdParam)
+    }
     fetchData(parentId);
   }, []);
 
@@ -151,7 +151,7 @@ const page = () => {
                         ? file.name.slice(0, 45) + "..."
                         : file.name}
                     </td>
-                    <td>{file.owner}</td>
+                    <td>{file?.userDetails?.username}</td>
                     <td>{file.createdAt}</td>
                   </tr>
                 );

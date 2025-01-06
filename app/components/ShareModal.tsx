@@ -8,7 +8,7 @@ import {toast} from "react-hot-toast"
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  id:number;
+  id:string | number;
   type:string | undefined,
   name:string
 }

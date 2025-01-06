@@ -7,7 +7,7 @@ import { FaFolder, FaRegImage } from "react-icons/fa";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { PiFileJs } from "react-icons/pi";
 import { FaGoogleDrive } from "react-icons/fa";
-import { addChildren } from "@/app/redux/slices/folderSclice";
+import { addChildren, updatParentId } from "@/app/redux/slices/folderSclice";
 import Loader from "@/app/components/Loader";
 import { GrLinkPrevious } from "react-icons/gr";
 import ActionDropdown from "@/app/components/ActionDropdown";
@@ -26,9 +26,12 @@ export type ChildrenType = {
 const Page = () => {
   const user = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
-  const { childrens, parentId } = useAppSelector((state) => state.parentFolder);
+  const { childrens, parentId = null } = useAppSelector(
+    (state) => state.parentFolder
+  );
   const [loading, setLoading] = useState(true);
-  const [actionDropdown, setActionDropDown] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalDocumentCount, setTotalDocumentCount] = useState(null);
 
   // Refs for button (three dots) and dropdown
   const dropdownRef = useRef<HTMLUListElement>(null);
@@ -38,7 +41,7 @@ const Page = () => {
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
   const fetchChildrens = useCallback(
-    (parentId: number | null) => {
+    (parentId: number | string | null) => {
       setLoading(true);
       axios
         .get(`${API_BASE_URL}/folder/childrens`, {
@@ -46,9 +49,11 @@ const Page = () => {
             parentId,
             userId: user._id,
             type: "drive",
+            page: currentPage,
           },
         })
         .then((res) => {
+          setTotalDocumentCount(res.data.totalDocumentCount);
           const payload = {
             parentId,
             childrens: res.data.childrens,
@@ -60,7 +65,7 @@ const Page = () => {
           setLoading(false);
         });
     },
-    [user._id]
+    [user._id, currentPage]
   );
 
   const openFile = (
@@ -76,13 +81,11 @@ const Page = () => {
           params: { userId: user._id, fileId: id },
         })
         .then((res) => {
-          console.log(process.env.NEXT_PUBLIC_S3_LOCATION,"location");
-          window.open(process.env.NEXT_PUBLIC_S3_LOCATION+url, "_blank");
+          window.open(process.env.NEXT_PUBLIC_S3_LOCATION + url, "_blank");
         })
         .catch((err) => console.log(err.message));
       return;
     }
-    console.log(parentId, "parent");
 
     fetchChildrens(id);
   };
@@ -104,8 +107,15 @@ const Page = () => {
   };
 
   useEffect(() => {
-    fetchChildrens(null); // Fetch root folder contents
-  }, [fetchChildrens]);
+    if (parentId) {
+         fetchChildrens(parentId); // Fetch root folder contents
+    } else {
+      fetchChildrens(null);
+    }
+    return () => {
+      dispatch( updatParentId({parentId:null})); // Reset parentId on component unmount
+    };
+  }, [fetchChildrens, currentPage]);
 
   if (loading) {
     return <Loader size={50} color="#4A90E2" />;
@@ -138,12 +148,12 @@ const Page = () => {
               <th className="px-4 py-2 text-left font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="relative">
             {childrens && childrens.length > 0 ? (
               childrens.map((child) => (
                 <tr
                   key={child._id}
-                  className={`border-b ${
+                  className={`relative border-b ${
                     child._id % 2 === 0 ? "bg-white" : "bg-gray-50"
                   }`}
                 >
@@ -176,7 +186,7 @@ const Page = () => {
                   <td className="border-gray-300 px-4 py-2">
                     {child.size ? (child.size / 1024).toFixed(2) : "-"}
                   </td>
-                  <td className="cursor-pointer border-gray-300 px-4 py-2">
+                  <td className=" cursor-pointer border-gray-300 px-4 py-2">
                     <ActionDropdown
                       s3Url={child.s3Url}
                       id={child._id}
@@ -202,6 +212,15 @@ const Page = () => {
             )}
           </tbody>
         </table>
+        {childrens.length && totalDocumentCount ? (
+          totalDocumentCount > childrens.length ? (
+            <p onClick={() => setCurrentPage((prev) => prev + 1)}>Show more</p>
+          ) : (
+            ""
+          )
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );

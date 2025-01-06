@@ -1,64 +1,143 @@
 "use client"; // Make sure the component is client-side
 
 import { useRouter } from "next/navigation";
-import React, { useEffect,useCallback, useState } from "react";
-import { useAppSelector } from "@/app/redux/store";
+import React, { useEffect, useCallback, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/app/redux/store";
 import { FaFolder } from "react-icons/fa";
 import { BsThreeDots } from "react-icons/bs";
-import axios from "axios"
+import { Folder } from "@/app/types/types";
+import { FileData } from "@/app/types/types";
+import axios from "axios";
+import FileIcons from "@/app/components/FileIcons";
+import { FaGoogleDrive } from "react-icons/fa";
+import { MdFolderShared } from "react-icons/md";
+import { updatParentId } from "@/app/redux/slices/folderSclice";
+import Loader from "@/app/components/Loader";
+import ActionDropdown from "@/app/components/ActionDropdown";
 
 const HomePage = () => {
   const user = useAppSelector((state) => state.user);
-  const router = useRouter();
-  const [latestData,setLatestData] = useState([])
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const [suggestedFolders, setSuggestedFolders] = useState<Folder[]>([]);
+  const [suggestedFiles, setSuggestedFiles] = useState<FileData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async()=>{
-      try {
-        const data  = await  axios.get("http://localhost:4000/folder/latest")
-      } catch (error) {
-        
-      }
-  },[])
-  useEffect(()=>{
-      fetchData()
-  },[fetchData])
+  const fetchData = useCallback(async () => {
+    try {
+      const { data } = await axios.get("http://localhost:4000/folder/latest", {
+        params: {
+          userId: user._id,
+        },
+      });
+      console.log(data);
+      setSuggestedFolders(data[0]);
+      setSuggestedFiles(data[1]);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log((error as Error).message);
+    }
+  }, []);
+
+  const handleFolderClick = (id:string,owner:String)=>{
+    if(user._id === owner ) {
+      const payload = {parentId:id}
+      dispatch(updatParentId(payload))
+      router.push("/drive")
+       console.log("owner");
+    }else{
+      router.push(`/shared?parentIdParam=${id}`);
+      console.log("shared")
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
-    <div className="px-4">
+    <div className="px-4">     
       {/* header */}
       <div className="">
         <h1 className="text-2xl font-md py-2 ">Welcome to Cloudy</h1>
-        <h5 className="text-lg px-4  font-md py-2">Suggested Folders </h5>
+        <h5 className="text-lg px-4 text-gray-800  font-md py-2">
+          Suggested Folders{" "}
+        </h5>
       </div>
-       {/* folders */}
-      <div className="grid grid-cols-12 p-4">
-        <div className="bg-gray-100 col-span-4 place-items-center  p-2 rounded-md min-h-[60px]">
-          <div className="flex justify-between  items-center px-3 ">
-            <div className="flex items-center gap-5">
-              <FaFolder className="text-2xl" />
-              <div>
-                <h6 className="text-md font-semibold">myFolder</h6>
-                <p className="text-sm">in my drive</p>
-              </div>
-            </div>
-            <div>
-              <BsThreeDots />
-            </div>
-          </div>
-        </div>
+      {/* folders */}
+      <div className="grid  gap-4 grid-cols-12 p-4">
+        {suggestedFolders
+          ? suggestedFolders.map((folder) => {
+              return (
+                <div
+                  key={folder._id}
+                  className="bg-gray-50 relative col-span-4  p-2 rounded-xl min-h-[60px]"
+                >
+                  <div  className="flex justify-between  items-center px-3 ">
+                    <div  onClick={()=>handleFolderClick(folder._id,folder.owner)} className="flex items-center gap-5">
+                      <div>
+                        <FaFolder className="text-2xl" />
+                      </div>
+                      <div>
+                        <h6 className="text-md font-semibold">{folder.name}</h6>
+                        <p className="text-sm">
+                          {folder.owner === user._id ? "in My drive" : "Shared"}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                       <ActionDropdown setFiles={setSuggestedFiles} setFolders={setSuggestedFolders} name={folder.name} id={folder._id} type={folder.type}  />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          : ""}
       </div>
-       {/* files */}
+      {/* files */}
       <div className="px-4">
-              <h5 className="text-lg  font-md py-5">Suggested Files</h5>
-              <table className="min-w-full">
-                 <thead className="">
-                  <tr className="border-b border-gray-500">
-
-                   <th className="px-4 py-2 text-gray-600 text-left  font-medium">Name</th>
-                   <th className="px-4 py-2 text-gray-600   font-medium">Reason Suggested</th>
-                   <th className="px-4 py-2 text-gray-600   font-medium">Location</th>
-                  </tr>
-                 </thead>
-              </table>
+        <h5 className="text-lg text-gray-800  font-md py-5">Suggested Files</h5>
+        <table className="min-w-full">
+          <thead className="">
+            <tr className="border-b text-left border-gray-500">
+              <th className="px-4 py-2 text-gray-600   font-medium">Name</th>
+              <th className="px-4 py-2 text-gray-600   font-medium">
+                Reason Suggested
+              </th>
+              <th className="px-4 py-2 text-gray-600 text-left   font-medium">
+                Location
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {suggestedFiles.length
+              ? suggestedFiles.map((file) => {
+                  return (
+                    <tr>
+                      <FileIcons name={file.name} type={file.type} />
+                      <td>{file.lastAccessed.toString()}</td>
+                      <td className="">
+                        {file.owner === user._id ? (
+                          <span className="flex items-center gap-2">
+                            <FaGoogleDrive /> Drive
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <MdFolderShared /> Shared
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              : ""}
+          </tbody>
+        </table>
       </div>
     </div>
   );

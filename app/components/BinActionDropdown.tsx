@@ -10,18 +10,18 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 interface Props {
   id: number;
-  type:string | undefined;
+  type: string | undefined;
   setBinFiles: React.Dispatch<React.SetStateAction<binType[]>>;
-  name:string
+  name: string;
 }
 
-const BinActionDropdown = ({id,type,setBinFiles,name}:Props) => {
-  const user = useAppSelector((state)=> state.user)
+const BinActionDropdown = ({ id, type, setBinFiles, name }: Props) => {
+  const user = useAppSelector((state) => state.user);
   const dropdownRef = useRef<HTMLUListElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropDown, setDropDown] = useState<boolean>(false);
   const [shareModal, setShareModal] = useState<boolean>(false);
-  const [openModal,setOpenModal] = useState<boolean>(false)
+  const [openModal, setOpenModal] = useState<boolean>(false);
 
   // Handle click outside to close the dropdown
   const handleClickOutside = (e: MouseEvent) => {
@@ -33,20 +33,22 @@ const BinActionDropdown = ({id,type,setBinFiles,name}:Props) => {
     }
   };
 
-  const handleRestore = async()=>{
-     try {
-        const {data} = await axios.get("http://localhost:4000/file/restore",{params:{userId:user._id,type,id,name}})
-        if(data){
-          setBinFiles((prev)=> prev.filter((file)=> file._id != id))
-        }
-        setDropDown(false)
-     } catch (error) {
-        setDropDown(false)
-        console.log((error as Error ).message);
+  const handleRestore = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:4000/file/restore", {
+        params: { userId: user._id, type, id, name },
+      });
+      if (data) {
+        setBinFiles((prev) => prev.filter((file) => file._id != id));
       }
-  }
- 
- // Add event listener for clicks outside the dropdown and button
+      setDropDown(false);
+    } catch (error) {
+      setDropDown(false);
+      console.log((error as Error).message);
+    }
+  };
+
+  // Add event listener for clicks outside the dropdown and button
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -79,10 +81,13 @@ const BinActionDropdown = ({id,type,setBinFiles,name}:Props) => {
               <TbRestore className="text-[17px]" /> Restore
             </button>
           </li>
-           <hr />
+          <hr />
           <li>
-            <button onClick={()=>setOpenModal(!openModal)} className="flex items-center !bg-white hover:bg-gray-100 active:bg-gray-200 focus:outline-none gap-2 text-md font-sm text-gray-700">
-              <MdDeleteOutline  className="text-[17px]" /> Delete Permennatly
+            <button
+              onClick={() => setOpenModal(!openModal)}
+              className="flex items-center !bg-white hover:bg-gray-100 active:bg-gray-200 focus:outline-none gap-2 text-md font-sm text-gray-700"
+            >
+              <MdDeleteOutline className="text-[17px]" /> Delete Permennatly
             </button>
           </li>
         </ul>
@@ -98,7 +103,16 @@ const BinActionDropdown = ({id,type,setBinFiles,name}:Props) => {
           onClose={() => setShareModal(false)} // Close modal
         />
       )}
-      {openModal ? <DeleteConfirmationModal close={()=>setOpenModal(false)} />  : ""}
+      {openModal ? (
+        <DeleteConfirmationModal
+          id={id}
+          type={type}
+          userId={user._id}
+          close={() => setOpenModal(false)}
+        />
+      ) : (
+        ""
+      )}
     </>
   );
 };

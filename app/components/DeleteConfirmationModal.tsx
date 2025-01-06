@@ -1,12 +1,23 @@
 
 import React from 'react'
 import ReactDOM from "react-dom"; // Import ReactDOM to create the portal
+import axios from "axios"
 
 type props = {
-    close:()=> void
+  id:number,
+  type:string  | undefined,
+  userId:string,
+  close:()=> void
 }
-const DeleteConfirmationModal = ({close}:props) => {
 
+const DeleteConfirmationModal = ({close,userId,type,id}:props) => {
+     const handleDelete = ()=>{
+         axios.get("http://localhost:4000/file/delete",{params:{
+            userId,
+            id,
+            type
+         }})
+     }
      return ReactDOM.createPortal(
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white  rounded-lg w-[450px] p-6">
@@ -20,7 +31,7 @@ const DeleteConfirmationModal = ({close}:props) => {
                 Cancel
               </button>
               <button
-                // onClick={handleFolderSubmit}
+                onClick={handleDelete}
                 className={`bg-red-500 text-white hover:bg-red-400  px-4 py-2 rounded-lg`}
                 // disabled={!folderName}
               >

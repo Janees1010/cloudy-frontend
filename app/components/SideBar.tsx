@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { GoPlus } from "react-icons/go";
 import { MdOutlineHome, MdFolderShared } from "react-icons/md";
 import { FiClock } from "react-icons/fi";
 import { RiDeleteBin6Line, RiDriveLine } from "react-icons/ri";
 import { TiCloudStorage } from "react-icons/ti";
 import { useAppDispatch, useAppSelector } from "../redux/store";
+import axios from "axios";
 import Link from "next/link";
 import FileUploadModal from "./FileUploadDropdown";
 import NewFolderModal from "./NewFolderModal";
 
 const SideBar: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const percentageUsed: number = 30;
+  // const percentageUsed: number = 30;
+  const user = useAppSelector((state) => state.user)
   const [dropdown, setDropdown] = useState<boolean>(false);
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
+  const [percentageUsed, setPercentageUsed] = useState<number>();
   const initialActiveLink = {
     home: false,
     drive: false,
@@ -32,7 +34,16 @@ const SideBar: React.FC = () => {
       [currentLink]: true, // Dynamically update the current link to true
     });
   };
-
+  const fetchPercentagteUsed = useCallback(async() => {
+    const response: any = await axios.get("http://localhost:4000/file/storage", {
+      params: { getPercentage: true,userId:user._id,currentPage:1 },
+    });
+    console.log(response);
+    setPercentageUsed(response.data);
+  }, []);
+  useEffect(() => {
+    fetchPercentagteUsed();
+  });
   return (
     <div className="w-full pt-3 px-7 h-screen bg-gray-50">
       {/* Logo and Title */}
@@ -124,7 +135,7 @@ const SideBar: React.FC = () => {
           ></div>
         </div>
         <p className="text-center text-sm font-md py-1 text-gray-600">
-          {percentageUsed.toFixed()}% of 12 GB used
+          {percentageUsed ? percentageUsed : ""}% of 10 GB used
         </p>
         <div className="flex justify-center">
           <button className="border rounded-2xl my-1 text-md border-gray-500 py-2 px-8 font-semibold text-blue-600">

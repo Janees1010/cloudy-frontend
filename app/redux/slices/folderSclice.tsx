@@ -23,11 +23,14 @@ const folderSlice = createSlice({
     updateChildren: (state, action) => {
       state.childrens.push(action.payload);
     },
+    updatParentId:(state,action)=>{
+        state.parentId = action.payload.parentId
+    },
     removeChildren:(state,action)=>{
       state.childrens = state.childrens.filter((child)=> child._id != action.payload.id)
     }
   },
 });
 
-export const { addChildren, updateChildren,removeChildren } = folderSlice.actions;
+export const { addChildren, updateChildren,removeChildren,updatParentId } = folderSlice.actions;
 export default folderSlice.reducer;

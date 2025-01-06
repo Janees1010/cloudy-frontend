@@ -9,14 +9,18 @@ import axios from "axios";
 import Loader from "@/app/components/Loader";
 
 const page = () => {
+
   const user = useAppSelector((state) => state.user);
+
   const [files, setFiles] = useState<any>();
   const [totalStorage, setTotalStorage] = useState<number>(0);
   const [loading,setLoading] = useState<boolean>(true)
+  const [currentPage,setCurrentPage] = useState<number>(1)
+
   const fetchFilesAndStorage = useCallback(() => {
     axios
       .get("http://localhost:4000/file/storage", {
-        params: { userId: user._id },
+        params: { userId: user._id,currentPage},
       })
       .then((res) => {
         setFiles(res.data[0].files);
@@ -28,14 +32,16 @@ const page = () => {
       }).finally(()=>{
         setLoading(false)
       })
-  }, []);
+  }, [currentPage]);
+
   useEffect(() => {
     fetchFilesAndStorage();
-  }, [fetchFilesAndStorage]);
-  console.log(totalStorage / 1024);
+  }, [fetchFilesAndStorage,currentPage]);
+
    if(loading){
      return <Loader />
    }
+
   return (
     <div>
       {files ? (
@@ -110,6 +116,7 @@ const page = () => {
           )}
         </tbody>
       </table>
+      <p onClick={()=>setCurrentPage((prev)=>prev + 1)}>Show more</p>
     </div>
   );
 };

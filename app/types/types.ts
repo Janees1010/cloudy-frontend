@@ -17,14 +17,21 @@ export interface binType {
 }
 
 export interface FileData {
-    _id:number,
+    _id:string,
     name: string,
     size: number,
     type: string,
     parentId:string | null,
-    userId:string,
     s3Url:string,
-    lastAccessed:string
+    lastAccessed:string,
+    owner:string
+  }
+
+  export interface Folder {
+     _id:string,
+     name:string,
+     owner:string,
+     type:string
   }
 
   export interface UserType  {
@@ -40,6 +47,9 @@ export interface FileData {
     type:string,
     createdAt:string,
     s3Url:string,
-    size:number
+    size:number,
+    userDetails?:{
+      username:string
+    }
   }
   

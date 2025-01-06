@@ -84,11 +84,11 @@ const Page = () => {
                     ) : (
                       <FaFile className="text-blue-700" />
                     )}
-                    {file.name.length > 50
+                    {file?.name?.length > 50
                       ? file.name.slice(0, 45) + "..."
                       : file.name}
                   </td>
-                  <td className="font-lg">{user.email}</td>
+                  <td>{file?.userDetails?.username}</td>
                   <td className="font-semibold">
                     {file.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
                   </td>
@@ -116,7 +116,7 @@ const Page = () => {
             </td>
           </tr>
           {recentFiles?.lastWeek?.length ? (
-            recentFiles.lastWeek.map((file: any) => {
+            recentFiles?.lastWeek?.map((file: any) => {
               return (
                 <tr className="border-b bg-gray-50">
                   <td
@@ -138,13 +138,13 @@ const Page = () => {
                     ) : (
                       <IoDocumentTextOutline className="text-blue-600" />
                     )}
-                    {file.name.length > 50
+                    {file?.name?.length > 50
                       ? file.name.slice(0, 45) + "..."
                       : file.name}
                   </td>
-                  <td>{user.email}</td>
+                  <td>{file?.userDetails?.username}</td>
                   <td>
-                    {file.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
+                    {file?.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
                   </td>
                 </tr>
               );
@@ -179,7 +179,7 @@ const Page = () => {
                     // }
                     className="flex font-medium cursor-pointer text-gray-800 border-gray-300 px-4 items-center gap-2 py-2"
                     role="button"
-                    aria-label={`Open ${file.name}`}
+                    aria-label={`Open ${file?.name}`}
                   >
                     {file.type === "folder" ? (
                       <FaFolder className="text-gray-600" />
@@ -196,7 +196,7 @@ const Page = () => {
                       ? file.name.slice(0, 45) + "..."
                       : file.name}
                   </td>
-                  <td>{user.email}</td>
+                  <td>{file?.userDetails?.username}</td>
                   <td>
                     {file.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
                   </td>

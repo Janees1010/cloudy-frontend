@@ -21,7 +21,7 @@ interface presignedUrl {
   url: string;
 }
 
-// interface  = 
+// interface  =
 
 declare module "react" {
   interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
@@ -65,36 +65,40 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
     }
   };
 
-  const uploadFileToS3 = async(signedUrls:FileWithUrl[],filteredFiles:File[])=>{
-      try {
-         if(!filteredFiles.length || !signedUrls.length) throw new Error("signedUrl or files not sended")
-          await Promise.allSettled(
-            signedUrls.map((obj:FileWithUrl, index: number) => {
-              return axios({
-                method: "PUT",
-                url: obj.url,
-                headers: { "Content-Type": filteredFiles[index].type },
-                data: filteredFiles[index],
-                withCredentials: false,
-              })
-                .then((res) => {
-                  let imageLocation = obj.url?.split("?")[0];
-                  const url = imageLocation?.split("/uploads")[1];
-                  signedUrls[index].url = `/uploads${url}`;
-                })
-                .catch((error) => {
-                  console.error(
-                    "Error uploading file:",
-                    error.response?.data || error.message
-                  );
-                });
+  const uploadFileToS3 = async (
+    signedUrls: FileWithUrl[],
+    filteredFiles: File[]
+  ) => {
+    try {
+      if (!filteredFiles.length || !signedUrls.length)
+        throw new Error("signedUrl or files not sended");
+      await Promise.allSettled(
+        signedUrls.map((obj: FileWithUrl, index: number) => {
+          return axios({
+            method: "PUT",
+            url: obj.url,
+            headers: { "Content-Type": filteredFiles[index].type },
+            data: filteredFiles[index],
+            withCredentials: false,
+          })
+            .then((res) => {
+              let imageLocation = obj.url?.split("?")[0];
+              const url = imageLocation?.split("/uploads")[1];
+              signedUrls[index].url = `/uploads${url}`;
             })
-          );
-          return signedUrls
-      } catch (error) {
-          throw new Error( (error as Error ).message)
-      }
-  }
+            .catch((error) => {
+              console.error(
+                "Error uploading file:",
+                error.response?.data || error.message
+              );
+            });
+        })
+      );
+      return signedUrls;
+    } catch (error) {
+      throw new Error((error as Error).message);
+    }
+  };
 
   const handleUploadFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -108,7 +112,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
 
         if (filteredFiles.length) {
           let signedUrls = await getPreSignedUrl(filteredFiles);
-          let files = await uploadFileToS3(signedUrls,filteredFiles)
+          let files = await uploadFileToS3(signedUrls, filteredFiles);
           axios
             .post(
               "http://localhost:4000/folder/upload",
@@ -147,26 +151,36 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
         const uploadToastId = toast.loading("Uploading file...");
         const fileArr = Array.from(file);
         const presignedUrl = await getPreSignedUrl(fileArr);
-        const uploadedFiles = await uploadFileToS3(presignedUrl,fileArr)
+        const uploadedFiles = await uploadFileToS3(presignedUrl, fileArr);
 
-        if(uploadedFiles.length){
-           axios.post("http://localhost:4000/file/upload",{file:uploadedFiles},{
-            params:{
-              userId:user._id,
-              parentId
-            }
-          }).then((res)=>{
-            setDropdown(false)
-            console.log(res,"response");
-            const payload = res.data.response;
-            console.log(res.data);
-            dispatch(addChildren(payload))
-            toast.success("Upload successful!", { id: uploadToastId });
-          }).catch((err)=>{
-             setDropdown(false)
-             toast.success("Error uploading", { id: uploadToastId });
-             throw new Error(err)
-          })
+        if (uploadedFiles.length) {
+          axios
+            .post(
+              "http://localhost:4000/file/upload",
+              { file: uploadedFiles },
+              {
+                params: {
+                  userId: user._id,
+                  parentId,
+                },
+              }
+            )
+            .then((res) => {
+              setDropdown(false);
+      
+              const payload = {
+                parentId: res.data.parentId,
+                childrens: res.data.childrens.childrens,
+              };
+              console.log(payload)
+              dispatch(addChildren(payload));
+              toast.success("Upload successful!", { id: uploadToastId });
+            })
+            .catch((err) => {
+              setDropdown(false);
+              toast.success("Error uploading", { id: uploadToastId });
+              throw new Error(err);
+            });
         }
       }
     } catch (error) {
