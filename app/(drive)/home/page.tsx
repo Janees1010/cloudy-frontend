@@ -17,8 +17,8 @@ import ActionDropdown from "@/app/components/ActionDropdown";
 
 const HomePage = () => {
   const user = useAppSelector((state) => state.user);
-  const dispatch = useAppDispatch()
-  const router = useRouter()
+  const dispatch = useAppDispatch();
+  const router = useRouter();
   const [suggestedFolders, setSuggestedFolders] = useState<Folder[]>([]);
   const [suggestedFiles, setSuggestedFiles] = useState<FileData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,17 +40,17 @@ const HomePage = () => {
     }
   }, []);
 
-  const handleFolderClick = (id:string,owner:String)=>{
-    if(user._id === owner ) {
-      const payload = {parentId:id}
-      dispatch(updatParentId(payload))
-      router.push("/drive")
-       console.log("owner");
-    }else{
+  const handleFolderClick = (id: string, owner: String) => {
+    if (user._id === owner) {
+      const payload = { parentId: id };
+      dispatch(updatParentId(payload));
+      router.push("/drive");
+      console.log("owner");
+    } else {
       router.push(`/shared?parentIdParam=${id}`);
-      console.log("shared")
+      console.log("shared");
     }
-  }
+  };
 
   useEffect(() => {
     fetchData();
@@ -61,7 +61,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="px-4">     
+    <div className="px-4">
       {/* header */}
       <div className="">
         <h1 className="text-2xl font-md py-2 ">Welcome to Cloudy</h1>
@@ -71,33 +71,48 @@ const HomePage = () => {
       </div>
       {/* folders */}
       <div className="grid  gap-4 grid-cols-12 p-4">
-        {suggestedFolders
-          ? suggestedFolders.map((folder) => {
-              return (
-                <div
-                  key={folder._id}
-                  className="bg-gray-50 relative col-span-4  p-2 rounded-xl min-h-[60px]"
-                >
-                  <div  className="flex justify-between  items-center px-3 ">
-                    <div  onClick={()=>handleFolderClick(folder._id,folder.owner)} className="flex items-center gap-5">
-                      <div>
-                        <FaFolder className="text-2xl" />
-                      </div>
-                      <div>
-                        <h6 className="text-md font-semibold">{folder.name}</h6>
-                        <p className="text-sm">
-                          {folder.owner === user._id ? "in My drive" : "Shared"}
-                        </p>
-                      </div>
+        {suggestedFolders.length ? (
+          suggestedFolders.map((folder) => {
+            return (
+              <div
+                key={folder._id}
+                className="bg-gray-50 relative col-span-4  p-2 rounded-xl min-h-[60px]"
+              >
+                <div className="flex justify-between  items-center px-3 ">
+                  <div
+                    onClick={() => handleFolderClick(folder._id, folder.owner)}
+                    className="flex items-center gap-5"
+                  >
+                    <div>
+                      <FaFolder className="text-2xl" />
                     </div>
                     <div>
-                       <ActionDropdown setFiles={setSuggestedFiles} setFolders={setSuggestedFolders} name={folder.name} id={folder._id} type={folder.type}  />
+                      <h6 className="text-md font-semibold">{folder.name}</h6>
+                      <p className="text-sm">
+                        {folder.owner === user._id ? "in My drive" : "Shared"}
+                      </p>
                     </div>
                   </div>
+                  <div>
+                    <ActionDropdown
+                      setFiles={setSuggestedFiles}
+                      setFolders={setSuggestedFolders}
+                      name={folder.name}
+                      id={folder._id}
+                      type={folder.type}
+                    />
+                  </div>
                 </div>
-              );
-            })
-          : ""}
+              </div>
+            );
+          })
+        ) : (
+          
+          <p className="col-span-12 text-center pt-[50px] text-gray-600 ">
+            No folders found. Upload folders or create to see them here!
+          </p>
+        
+        )}
       </div>
       {/* files */}
       <div className="px-4">
@@ -115,27 +130,33 @@ const HomePage = () => {
             </tr>
           </thead>
           <tbody>
-            {suggestedFiles.length
-              ? suggestedFiles.map((file) => {
-                  return (
-                    <tr>
-                      <FileIcons name={file.name} type={file.type} />
-                      <td>{file.lastAccessed.toString()}</td>
-                      <td className="">
-                        {file.owner === user._id ? (
-                          <span className="flex items-center gap-2">
-                            <FaGoogleDrive /> Drive
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <MdFolderShared /> Shared
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              : ""}
+            {suggestedFiles.length ? (
+              suggestedFiles.map((file) => {
+                return (
+                  <tr>
+                    <FileIcons name={file.name} type={file.type} />
+                    <td>{file.lastAccessed.toString()}</td>
+                    <td className="">
+                      {file.owner === user._id ? (
+                        <span className="flex items-center gap-2">
+                          <FaGoogleDrive /> Drive
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <MdFolderShared /> Shared
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+              <td colSpan={3} className="text-center pt-[100px] text-gray-600 ">
+                No files found. Upload files to see them here!
+              </td>
+            </tr>
+            )}
           </tbody>
         </table>
       </div>

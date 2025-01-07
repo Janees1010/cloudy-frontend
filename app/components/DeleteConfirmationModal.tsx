@@ -2,21 +2,34 @@
 import React from 'react'
 import ReactDOM from "react-dom"; // Import ReactDOM to create the portal
 import axios from "axios"
+import { binType } from '../types/types';
+import {toast} from "react-hot-toast"
 
 type props = {
   id:number,
   type:string  | undefined,
   userId:string,
+  setBinFiles:React.Dispatch<React.SetStateAction<binType[]>>;
+  setTotalDocumentCount:React.Dispatch<React.SetStateAction<number>>;
   close:()=> void
 }
 
-const DeleteConfirmationModal = ({close,userId,type,id}:props) => {
+const DeleteConfirmationModal = ({close,userId,type,id,setBinFiles,setTotalDocumentCount}:props) => {
      const handleDelete = ()=>{
+      const toastId = toast.loading("deleting...")
          axios.get("http://localhost:4000/file/delete",{params:{
             userId,
             id,
             type
-         }})
+         }}).then((res)=>{
+          
+           setTotalDocumentCount((pre)=> pre - 1)
+           setBinFiles((prev) => prev.filter((file) => file._id != id));
+           close()
+           toast.success("deleted successfully",{id:toastId})
+         }).catch((err)=>{
+             console.log(err.message)  
+         })
      }
      return ReactDOM.createPortal(
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

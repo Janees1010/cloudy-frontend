@@ -23,7 +23,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose,id,type,name}) 
   // Mock API call to simulate fetching users
   const fetchUsers = async (query: string) => {
     // Simulate an API call delay
-    const {data}  =  await axios.get(`http://localhost:3500/user/search/${query}`)
+    const {data}  =  await axios.get(`http://localhost:3500/user/search`,{params:{query,email:user.email}})
     console.log(data,"search");
     return data
   };

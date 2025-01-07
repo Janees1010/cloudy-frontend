@@ -5,7 +5,7 @@ import { toast, Toaster } from "react-hot-toast";
 import axios from "axios";
 import { FaRegFolder } from "react-icons/fa";
 import { CiFileOn } from "react-icons/ci";
-import { sign } from "crypto";
+import { usePathname } from 'next/navigation';
 
 interface Props {
   dropdown: boolean;
@@ -32,8 +32,18 @@ declare module "react" {
 const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
   const dispatch = useAppDispatch();
   const dropdownRef = useRef<HTMLUListElement>(null);
-  const user = useAppSelector((state) => state.user);
-  const { parentId = null } = useAppSelector((state) => state.parentFolder);
+  const user = useAppSelector((state) => state.user)
+  const path = usePathname()
+  const { parentId = null,childrens } = useAppSelector((state) => state.parentFolder);
+
+  const isOwner = ()=>{
+    console.log(path,"path");
+    const value =   path.includes("/shared") ? true : false
+    console.log(value);
+    return value
+    
+ }
+
 
   const handleCreateFolder = () => {
     try {
@@ -102,10 +112,12 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
 
   const handleUploadFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      const isShared:boolean  = isOwner()
+      if(isShared) return toast.error("cant upload inside a shared folder")
+       let uploadToastId = toast.loading("Uploading folder...");
       const files = e.target.files;
       setDropdown(false);
       if (files) {
-        const uploadToastId = toast.loading("Uploading folder...");
 
         let filesArray = Array.from(files);
         const filteredFiles = filterFiles(filesArray);
@@ -122,7 +134,11 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
               { params: { userId: user._id, parentId } }
             )
             .then((res) => {
-              const payload = res.data.response;
+              console.log(res.data)
+              const payload = {
+                parentId: res.data.parentId,  
+                childrens: res.data.childrens.childrens,
+              };
               dispatch(addChildren(payload));
               toast.success("Upload successful!", { id: uploadToastId });
             })
@@ -146,6 +162,8 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
 
   const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      const isShared:boolean  = isOwner()
+      if(isShared) return toast.error("cant upload inside a shared folder")
       let file = e.target.files;
       if (file) {
         const uploadToastId = toast.loading("Uploading file...");

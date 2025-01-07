@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/app/redux/store";
 import { FaFolder, FaRegImage } from "react-icons/fa";
 import { IoDocumentTextOutline } from "react-icons/io5";
@@ -20,28 +21,35 @@ export type ChildrenType = {
   childrenType: string;
   parentId: number;
   userId: number;
+  owner:string ;
   s3Url: string;
 };
 
 const Page = () => {
+
   const user = useAppSelector((state) => state.user);
+
+
   const dispatch = useAppDispatch();
   const { childrens, parentId = null } = useAppSelector(
     (state) => state.parentFolder
   );
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalDocumentCount, setTotalDocumentCount] = useState(null);
+  const [totalDocumentCount, setTotalDocumentCount] = useState<number>(0);
 
-  // Refs for button (three dots) and dropdown
-  const dropdownRef = useRef<HTMLUListElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const searchParams = useSearchParams();
+  const parentIdParam = searchParams.get('id'); // Get the parentId query param
+  console.log(parentIdParam,"param");
+  
 
+   
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
   const fetchChildrens = useCallback(
     (parentId: number | string | null) => {
+      console.log(parentId);
       setLoading(true);
       axios
         .get(`${API_BASE_URL}/folder/childrens`, {
@@ -110,13 +118,13 @@ const Page = () => {
     if (parentId) {
          fetchChildrens(parentId); // Fetch root folder contents
     } else {
-      fetchChildrens(null);
+         fetchChildrens(null);
     }
     return () => {
       dispatch( updatParentId({parentId:null})); // Reset parentId on component unmount
     };
-  }, [fetchChildrens, currentPage]);
-
+  }, [fetchChildrens, currentPage , parentIdParam]);
+ 
   if (loading) {
     return <Loader size={50} color="#4A90E2" />;
   }
@@ -188,6 +196,7 @@ const Page = () => {
                   </td>
                   <td className=" cursor-pointer border-gray-300 px-4 py-2">
                     <ActionDropdown
+                      setTotalDocumentCount = {setTotalDocumentCount}
                       s3Url={child.s3Url}
                       id={child._id}
                       type={child.type}

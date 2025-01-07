@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation';
 import axios from "axios";
 import { useAppSelector } from "@/app/redux/store";
@@ -8,20 +7,15 @@ import { SharedFiles } from "@/app/types/types";
 import { FaFolder, FaRegImage } from "react-icons/fa";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { PiFileJs } from "react-icons/pi";
-import { FaGoogleDrive } from "react-icons/fa";
 import { GrLinkPrevious } from "react-icons/gr";
 import Loader from "@/app/components/Loader";
-import { log } from "node:console";
+import ActionDropdown from "@/app/components/ActionDropdown";
 
 const page = () => {
-  const user = useAppSelector((state) => state.user);
-
-  const searchParams = useSearchParams();
   
+  const user = useAppSelector((state) => state.user);
+  const searchParams = useSearchParams();
   const parentIdParam = searchParams.get('parentIdParam'); // Get the parentId query param
-
-
- 
   const [sharedFiles, setSharedFiles] = useState<SharedFiles[]>([]);
   const [parentId, setParentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,16 +109,17 @@ const page = () => {
       ) : (
         ""
       )}
-      <table className="min-w-full">
+      <table className="min-w-full my-10">
         <thead>
           <tr className="border-b  border-gray-500  text-gray-700">
             <th className="px-4 py-2 text-left font-medium">Name</th>
             <th className="px-4 py-2 text-left font-medium">Shared By</th>
             <th className="px-4 py-2 text-left font-medium">Shared Date</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {sharedFiles
+          {sharedFiles.length
             ? sharedFiles.map((file) => {
                 return (
                   <tr className="border-b border-gray-500" key={file._id}>
@@ -153,10 +148,17 @@ const page = () => {
                     </td>
                     <td>{file?.userDetails?.username}</td>
                     <td>{file.createdAt}</td>
+                    <td><ActionDropdown shared={true} id={file._id} name={file.name} type={file.type} s3Url={file.s3Url} setFiles={setSharedFiles} /></td>
                   </tr>
                 );
               })
-            : ""}
+            : (
+              <tr>
+                <td colSpan={3} className="text-center pt-[200px] text-gray-600 ">
+                     No shared files or folders found !
+                </td>
+              </tr>
+            )}
         </tbody>
       </table>
     </div>

@@ -35,15 +35,16 @@ const SideBar: React.FC = () => {
     });
   };
   const fetchPercentagteUsed = useCallback(async() => {
-    const response: any = await axios.get("http://localhost:4000/file/storage", {
+    axios.get("http://localhost:4000/file/storage", {
       params: { getPercentage: true,userId:user._id,currentPage:1 },
-    });
-    console.log(response);
-    setPercentageUsed(response.data);
+    }).then((res)=>{
+       console.log(res.data,"storageused")
+       setPercentageUsed(res.data);
+    }).catch((err => console.log(err.message)))
   }, []);
   useEffect(() => {
     fetchPercentagteUsed();
-  });
+  },[]);
   return (
     <div className="w-full pt-3 px-7 h-screen bg-gray-50">
       {/* Logo and Title */}
@@ -135,7 +136,7 @@ const SideBar: React.FC = () => {
           ></div>
         </div>
         <p className="text-center text-sm font-md py-1 text-gray-600">
-          {percentageUsed ? percentageUsed : ""}% of 10 GB used
+          {percentageUsed} % of 10 GB used
         </p>
         <div className="flex justify-center">
           <button className="border rounded-2xl my-1 text-md border-gray-500 py-2 px-8 font-semibold text-blue-600">

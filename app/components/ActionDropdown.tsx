@@ -6,43 +6,66 @@ import { BsThreeDots, BsDownload } from "react-icons/bs";
 import { useAppSelector, useAppDispatch } from "../redux/store";
 import { removeChildren } from "../redux/slices/folderSclice";
 import axios from "axios";
-import  {toast} from "react-hot-toast"
+import { toast } from "react-hot-toast";
 import ShareModal from "./ShareModal";
-import { FileData,Folder } from "../types/types";
+import { FileData, Folder, SharedFiles } from "../types/types";
 
 interface Props {
   id: string | number;
   type: string | undefined;
   name: string;
   s3Url?: string;
-  setFolders?:React.Dispatch<React.SetStateAction<Folder[]>> | null,
-  setFiles?:React.Dispatch<React.SetStateAction<FileData[]>> | null
+  shared? :boolean;
+  setTotalDocumentCount?: React.Dispatch<React.SetStateAction<number>>;
+  setFolders?: React.Dispatch<React.SetStateAction<Folder[]>> | null;
+  setFiles?:
+    | React.Dispatch<React.SetStateAction<FileData[]>>
+    | null
+    | React.Dispatch<React.SetStateAction<SharedFiles[]>>;
 }
 
-const ActionDropdown = ({ id, type, name, s3Url,setFiles = null,setFolders = null }: Props) => {
+const ActionDropdown = ({
+  id,
+  type,
+  name,
+  s3Url,
+  shared = false,
+  setFiles = null,
+  setFolders = null,
+  setTotalDocumentCount,
+}: Props) => {
+
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.user);
   const dropdownRef = useRef<HTMLUListElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropDown, setDropDown] = useState(false);
+  const [shareModal, setShareModal] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
     left: 0,
   });
-  const [shareModal, setShareModal] = useState(false);
+   
 
   const handleMoveToBin = () => {
-    const toastId = toast.loading("moving To Bin ...")
+    const toastId = toast.loading("moving To Bin ...");
     axios
-      .post("http://localhost:4000/file/moveToBin", { id, type, name })
+      .post("http://localhost:4000/file/moveToBin", {
+        id,
+        type,
+        name,
+        userId: user._id,
+      })
       .then(() => {
-        if(type === "folder" && setFolders){
-           setFolders((prev)=>(prev.filter((folder)=> folder._id != id)))
-        }else if(type != "folder" && setFiles){
-          setFiles((prev)=>(prev.filter((file)=> file._id != id)))
-        }else{
+        setTotalDocumentCount ? setTotalDocumentCount((pre) => pre - 1) : "";
+        if (type === "folder" && setFolders) {
+          setFolders((prev) => prev.filter((folder) => folder._id != id));
+        } else if (type != "folder" && setFiles || shared && setFiles) {  
+          setFiles((prev: any) => prev.filter((file: any) => file._id != id));
+        } else {
           dispatch(removeChildren({ id }));
         }
-        toast.success("moved successfully",{id:toastId})
+        toast.success("moved successfully", { id: toastId });
       })
       .catch((err) => {
         console.error(err.message);

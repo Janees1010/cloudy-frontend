@@ -14,7 +14,7 @@ const page = () => {
   const [binFiles, setBinFiles] = useState<binType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalDocumentCount, setTotalDocumentCount] = useState<number>();
+  const [totalDocumentCount, setTotalDocumentCount] = useState<number>(0);
 
   const fetchBinFiles = useCallback(async () => {
     try {
@@ -89,6 +89,7 @@ const page = () => {
                   </td>
                   <td className="text-md font-md">
                     <BinActionDropdown
+                      setTotalDocumentCount = {setTotalDocumentCount}
                       name={file.name}
                       id={file._id}
                       type={file.type}

@@ -1,4 +1,4 @@
-import { use, useEffect, useRef, useState } from "react";
+import {  useEffect, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { useAppSelector, useAppDispatch } from "../redux/store";
 import { TbRestore } from "react-icons/tb";
@@ -6,6 +6,7 @@ import { MdDeleteOutline } from "react-icons/md";
 import axios from "axios";
 import ShareModal from "./ShareModal";
 import { binType } from "../types/types";
+import{toast} from "react-hot-toast"
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 interface Props {
@@ -13,9 +14,10 @@ interface Props {
   type: string | undefined;
   setBinFiles: React.Dispatch<React.SetStateAction<binType[]>>;
   name: string;
+  setTotalDocumentCount: React.Dispatch<React.SetStateAction<number>>
 }
 
-const BinActionDropdown = ({ id, type, setBinFiles, name }: Props) => {
+const BinActionDropdown = ({ id, type, setBinFiles, name,setTotalDocumentCount }: Props) => {
   const user = useAppSelector((state) => state.user);
   const dropdownRef = useRef<HTMLUListElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -35,11 +37,14 @@ const BinActionDropdown = ({ id, type, setBinFiles, name }: Props) => {
 
   const handleRestore = async () => {
     try {
+      const toastId = toast.loading("restoring ...")
       const { data } = await axios.get("http://localhost:4000/file/restore", {
         params: { userId: user._id, type, id, name },
       });
       if (data) {
+        setTotalDocumentCount((pre)=> pre - 1)
         setBinFiles((prev) => prev.filter((file) => file._id != id));
+        toast.success("sucessfully restored",{id:toastId})
       }
       setDropDown(false);
     } catch (error) {
@@ -105,6 +110,8 @@ const BinActionDropdown = ({ id, type, setBinFiles, name }: Props) => {
       )}
       {openModal ? (
         <DeleteConfirmationModal
+          setTotalDocumentCount={setTotalDocumentCount}
+          setBinFiles = {setBinFiles}
           id={id}
           type={type}
           userId={user._id}

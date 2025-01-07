@@ -9,39 +9,40 @@ import axios from "axios";
 import Loader from "@/app/components/Loader";
 
 const page = () => {
-
   const user = useAppSelector((state) => state.user);
 
   const [files, setFiles] = useState<any>();
   const [totalStorage, setTotalStorage] = useState<number>(0);
-  const [loading,setLoading] = useState<boolean>(true)
-  const [currentPage,setCurrentPage] = useState<number>(1)
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalDocumenCount,setTotalDocumentCount] = useState<number>(0)
 
   const fetchFilesAndStorage = useCallback(() => {
     axios
       .get("http://localhost:4000/file/storage", {
-        params: { userId: user._id,currentPage},
+        params: { userId: user._id, currentPage },
       })
       .then((res) => {
-        setFiles(res.data[0].files);
-        console.log(res.data[0]);
-        setTotalStorage(res.data[0].totalStorage / 1024);
+        console.log(res.data);
+        setFiles(res.data.files[0].files);
+        setTotalStorage(res.data.files[0].totalStorage / 1024);
+        setTotalDocumentCount(res.data.totalDocumentCount)
       })
       .catch((err) => {
         console.log(err.message);
-      }).finally(()=>{
-        setLoading(false)
       })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [currentPage]);
 
   useEffect(() => {
     fetchFilesAndStorage();
-  }, [fetchFilesAndStorage,currentPage]);
+  }, [fetchFilesAndStorage, currentPage]);
 
-   if(loading){
-     return <Loader />
-   }
-
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <div>
       {files ? (
@@ -72,7 +73,7 @@ const page = () => {
               Files using Drive storage{" "}
             </th>
             <th className="font-medium text-left py-2 text-gray-800">
-              Storage used
+              Storage used(kb)
             </th>
           </tr>
         </thead>
@@ -111,12 +112,14 @@ const page = () => {
             })
           ) : (
             <tr>
-              <td>not fount</td>
+              <td colSpan={3} className="text-center pt-[200px] text-gray-600 ">
+                No files found. Upload files  to see them here!
+              </td>
             </tr>
           )}
         </tbody>
       </table>
-      <p onClick={()=>setCurrentPage((prev)=>prev + 1)}>Show more</p>
+       {totalDocumenCount > files?.length ?  <p onClick={() => setCurrentPage((prev) => prev + 1)}>Show more</p> : "" }
     </div>
   );
 };

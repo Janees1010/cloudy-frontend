@@ -25,10 +25,12 @@ const Navbar = () => {
 
   const handleSelect = (id:number,type:string,url:string)=>{
       console.log(type,id,url);
-      if(type === "folder"){
+         if(type === "folder"){
               const payload = {parentId:id}
               dispatch(updatParentId(payload))
-              router.push("/drive")
+              // router.push(`/drive/${id}`)
+              const random = Math.random()
+              router.push(`/drive?id=${random}`);
       } else{
          window.open(process.env.NEXT_PUBLIC_S3_LOCATION+url, "_blank");
       }
@@ -46,7 +48,7 @@ const Navbar = () => {
         try {
           setLoading(true);
           const { data } = await axios.get("http://localhost:4000/folder/search", {
-            params: { query: value, location: path }, // Send the current path
+            params: { query: value, location: path ,}, // Send the current path
           });
           setSearchResults(data);
         } catch (err) {
