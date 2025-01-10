@@ -6,7 +6,7 @@ import { MdOutlineHome, MdFolderShared } from "react-icons/md";
 import { FiClock } from "react-icons/fi";
 import { RiDeleteBin6Line, RiDriveLine } from "react-icons/ri";
 import { TiCloudStorage } from "react-icons/ti";
-import { useAppDispatch, useAppSelector } from "../redux/store";
+import {  useAppSelector } from "../redux/store";
 import axios from "axios";
 import Link from "next/link";
 import FileUploadModal from "./FileUploadDropdown";
@@ -35,7 +35,7 @@ const SideBar: React.FC = () => {
     });
   };
   const fetchPercentagteUsed = useCallback(async() => {
-    axios.get("http://localhost:4000/file/storage", {
+    axios.get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/storage`, {
       params: { getPercentage: true,userId:user._id,currentPage:1 },
     }).then((res)=>{
        console.log(res.data,"storageused")
@@ -135,14 +135,14 @@ const SideBar: React.FC = () => {
             style={{ width: `${percentageUsed}%` }}
           ></div>
         </div>
-        <p className="text-center text-sm font-md py-1 text-gray-600">
+        <p className="text-center text-sm font-md py-5 text-gray-600">
           {percentageUsed} % of 10 GB used
         </p>
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           <button className="border rounded-2xl my-1 text-md border-gray-500 py-2 px-8 font-semibold text-blue-600">
             Get more storage
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Modal */}

@@ -44,15 +44,13 @@ const Page = () => {
   
 
    
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
-
+ 
   const fetchChildrens = useCallback(
     (parentId: number | string | null) => {
       console.log(parentId);
       setLoading(true);
       axios
-        .get(`${API_BASE_URL}/folder/childrens`, {
+        .get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/folder/childrens`, {
           params: {
             parentId,
             userId: user._id,
@@ -73,7 +71,7 @@ const Page = () => {
           setLoading(false);
         });
     },
-    [user._id, currentPage]
+    [user._id, currentPage,dispatch]
   );
 
   const openFile = (
@@ -85,7 +83,7 @@ const Page = () => {
     e.preventDefault();
     if (type !== "folder" && url) {
       axios
-        .get("http://localhost:4000/file/update-LastAcceseed", {
+        .get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/update-LastAcceseed`, {
           params: { userId: user._id, fileId: id },
         })
         .then((res) => {
@@ -100,7 +98,7 @@ const Page = () => {
 
   const handlePreviousPage = () => {
     axios
-      .get("http://localhost:4000/file/getParentId", {
+      .get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/getParentId`, {
         params: {
           parentId: parentId,
           userId: user._id,
@@ -123,7 +121,7 @@ const Page = () => {
     return () => {
       dispatch( updatParentId({parentId:null})); // Reset parentId on component unmount
     };
-  }, [fetchChildrens, currentPage , parentIdParam]);
+  }, [fetchChildrens,currentPage,parentIdParam]);
  
   if (loading) {
     return <Loader size={50} color="#4A90E2" />;

@@ -9,7 +9,7 @@ import { FaGoogleDrive, FaFile, FaFolder, FaRegImage } from "react-icons/fa";
 import { RiDeleteBin2Line } from "react-icons/ri";
 import Loader from "@/app/components/Loader";
 
-const page = () => {
+const Page = () => {
   const user = useAppSelector((state) => state.user);
   const [binFiles, setBinFiles] = useState<binType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -18,7 +18,7 @@ const page = () => {
 
   const fetchBinFiles = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/file/binItems", {
+      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/binItems`, {
         params: { userId: user._id, page: currentPage },
       });
       if (data) {
@@ -65,7 +65,7 @@ const page = () => {
           {binFiles?.length ? (
             binFiles.map((file) => {
               return (
-                <tr className="border-b bg-gray-50  border-gray-200">
+                <tr key={file._id} className="border-b bg-gray-50  border-gray-200">
                   <td className="text-md font-md flex p-2 items-center gap-2">
                     {file.type === "folder" ? (
                       <FaFolder className="text-gray-600" />
@@ -124,4 +124,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

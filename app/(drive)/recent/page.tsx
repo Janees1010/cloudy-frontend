@@ -14,7 +14,7 @@ const Page = () => {
   const [loading, setLoading] = useState<boolean>(true);
   useEffect(() => {
     axios
-      .get("http://localhost:4000/file/recent", {
+      .get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/recent`, {
         params: {
           userId: user._id,
         },
@@ -28,7 +28,7 @@ const Page = () => {
         setLoading(false);
         console.log(err.message);
       });
-  }, []);
+  }, [user._id]);
   if (loading) {
     return <Loader />;
   }
@@ -64,7 +64,7 @@ const Page = () => {
           {recentFiles?.today?.length ? (
             recentFiles.today.map((file: any) => {
               return (
-                <tr className="border-b bg-gray-50 ">
+                <tr key={file._id} className="border-b bg-gray-50 ">
                   <td
                     // onClick={(e) =>
                     //   openFile(e, child._id, child.childrenType,child.s3Url)
@@ -88,7 +88,18 @@ const Page = () => {
                       ? file.name.slice(0, 45) + "..."
                       : file.name}
                   </td>
-                  <td>{file?.userDetails?.username}</td>
+                  <td>
+                    <div className="flex gap-2 items-center">
+                      <span className="w-[25px] h-[25px] rounded-full bg-blue-500 flex items-center justify-center text-white">
+                        {file?.userDetails?.username
+                          ? file.userDetails.username.slice(0, 1).toUpperCase()
+                          : "?"}
+                      </span>
+                      <span className="text-md font-md ">
+                        {file?.userDetails?.username || "Unknown User"}
+                      </span>
+                    </div>
+                  </td>
                   <td className="font-semibold">
                     {file.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
                   </td>
@@ -118,7 +129,7 @@ const Page = () => {
           {recentFiles?.lastWeek?.length ? (
             recentFiles?.lastWeek?.map((file: any) => {
               return (
-                <tr className="border-b bg-gray-50">
+                <tr key={file._id} className="border-b bg-gray-50">
                   <td
                     // onClick={(e) =>
                     //   openFile(e, child._id, child.childrenType,child.s3Url)
@@ -142,7 +153,18 @@ const Page = () => {
                       ? file.name.slice(0, 45) + "..."
                       : file.name}
                   </td>
-                  <td>{file?.userDetails?.username}</td>
+                  <td>
+                    <div className="flex gap-2 items-center">
+                      <span className="w-[25px] h-[25px] rounded-full bg-blue-500 flex items-center justify-center text-white">
+                        {file?.userDetails?.username
+                          ? file.userDetails.username.slice(0, 1).toUpperCase()
+                          : "?"}
+                      </span>
+                      <span className="text-md font-md ">
+                        {file?.userDetails?.username || "Unknown User"}
+                      </span>
+                    </div>
+                  </td>
                   <td>
                     {file?.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
                   </td>
@@ -172,7 +194,7 @@ const Page = () => {
           {recentFiles?.lastMonth?.length ? (
             recentFiles.lastMonth.map((file: any) => {
               return (
-                <tr className="border-b bg-gray-50">
+                <tr key={file._id} className="border-b bg-gray-50">
                   <td
                     // onClick={(e) =>
                     //   openFile(e, child._id, child.childrenType,child.s3Url)
@@ -196,7 +218,18 @@ const Page = () => {
                       ? file.name.slice(0, 45) + "..."
                       : file.name}
                   </td>
-                  <td>{file?.userDetails?.username}</td>
+                  <td>
+                    <div className="flex gap-2 items-center">
+                      <span className="w-[25px] h-[25px] rounded-full bg-blue-500 flex items-center justify-center text-white">
+                        {file?.userDetails?.username
+                          ? file.userDetails.username.slice(0, 1).toUpperCase()
+                          : "?"}
+                      </span>
+                      <span className="text-md font-md ">
+                        {file?.userDetails?.username || "Unknown User"}
+                      </span>
+                    </div>
+                  </td>
                   <td>
                     {file.size ? (file.size / 1024).toFixed(2) + "Kb" : "-"}
                   </td>

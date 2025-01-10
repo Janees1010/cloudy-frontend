@@ -21,7 +21,7 @@ const Page = () => {
 
   const googleAuth = () => {
     console.log("Google Auth clicked");
-    window.open("http://localhost:3500/auth/google/callback", "_self");
+    window.open(`${process.env.NEXT_PUBLIC_USER_SERVER_URL}/auth/google/callback`, "_self");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +43,7 @@ const Page = () => {
     console.log("Form submitted:", formData);
     try {
       setLoading(true)
-      axios.post("http://localhost:3500/signup",{...formData}).then((res)=>{
+      axios.post(`${process.env.NEXT_PUBLIC_USER_SERVER_URL}/signup`,{...formData}).then((res)=>{
         const payload = res.data.user  
         dispatch(addUser(payload))
         router.push("/home")

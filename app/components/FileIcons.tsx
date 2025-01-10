@@ -15,29 +15,7 @@ type props = {
 const FileIcons = ({name,type}:props) => {
   const user = useAppSelector((state)=> state.user)
   const {parentId} = useAppSelector((state) => state.parentFolder)
-  // const openFile = (
-  //   e: React.MouseEvent,
-  //   id: number,
-  //   type: string,
-  //   url?: string
-  // ) => {
-  //   e.preventDefault();
-  //   if (type !== "folder" && url) {
-  //     axios
-  //       .get("http://localhost:4000/file/update-LastAcceseed", {
-  //         params: { userId: user._id, fileId: id },
-  //       })
-  //       .then((res) => {
-  //         console.log(process.env.NEXT_PUBLIC_S3_LOCATION,"location");
-  //         window.open(process.env.NEXT_PUBLIC_S3_LOCATION+url, "_blank");
-  //       })
-  //       .catch((err) => console.log(err.message));
-  //     return;
-  //   }
-  //   console.log(parentId, "parent");
-  
-  //   fetchChildrens(id);
-  // };
+ 
    
   return (
     <td 

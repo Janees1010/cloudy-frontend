@@ -50,7 +50,7 @@ const ActionDropdown = ({
   const handleMoveToBin = () => {
     const toastId = toast.loading("moving To Bin ...");
     axios
-      .post("http://localhost:4000/file/moveToBin", {
+      .post(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/moveToBin`, {
         id,
         type,
         name,

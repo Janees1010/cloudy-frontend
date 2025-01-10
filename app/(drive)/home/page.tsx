@@ -25,12 +25,11 @@ const HomePage = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/folder/latest", {
+      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/folder/latest`, {
         params: {
           userId: user._id,
         },
       });
-      console.log(data);
       setSuggestedFolders(data[0]);
       setSuggestedFiles(data[1]);
       setLoading(false);
@@ -38,19 +37,39 @@ const HomePage = () => {
       setLoading(false);
       console.log((error as Error).message);
     }
-  }, []);
+  }, [user._id]);
 
   const handleFolderClick = (id: string, owner: String) => {
     if (user._id === owner) {
       const payload = { parentId: id };
       dispatch(updatParentId(payload));
       router.push("/drive");
-      console.log("owner");
     } else {
       router.push(`/shared?parentIdParam=${id}`);
       console.log("shared");
     }
   };
+
+  const openFile = (
+    e: React.MouseEvent,
+    id: string,
+    type: string,
+    url?: string
+  ) => {
+    e.preventDefault();
+    if (url) {
+      axios
+        .get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/update-LastAcceseed`, {
+          params: { userId: user._id, fileId: id },
+        })
+        .then((res) => {
+          window.open(process.env.NEXT_PUBLIC_S3_LOCATION + url, "_blank");
+        })
+        .catch((err) => console.log(err.message));
+      return;
+    }
+  };
+
 
   useEffect(() => {
     fetchData();
@@ -133,9 +152,9 @@ const HomePage = () => {
             {suggestedFiles.length ? (
               suggestedFiles.map((file) => {
                 return (
-                  <tr>
+                  <tr key={file._id} className="cursor-pointer" onClick={(e)=>{openFile(e,file._id,file.type,file.s3Url)}}>
                     <FileIcons name={file.name} type={file.type} />
-                    <td>{file.lastAccessed.toString()}</td>
+                    <td className="font-medium text-md text-gray-700">Last Accessed At {new Date(file.lastAccessed).toDateString()}</td>
                     <td className="">
                       {file.owner === user._id ? (
                         <span className="flex items-center gap-2">

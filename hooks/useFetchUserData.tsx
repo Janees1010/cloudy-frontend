@@ -4,7 +4,7 @@ import { useAppDispatch } from "@/app/redux/store";
 import { addUser } from "@/app/redux/slices/userSlices";
 
 axios.defaults.withCredentials = true; // Ensure cookies are sent
-axios.defaults.baseURL = "http://localhost:3500"; // Backend URL
+axios.defaults.baseURL = process.env.NEXT_PUBLIC_USER_SERVER_URL // Backend URL
 
 const useLoadUserData = () => {
   const dispatch = useAppDispatch();

@@ -23,7 +23,7 @@ export interface FileData {
     type: string,
     parentId:string | null,
     s3Url:string,
-    lastAccessed:string,
+    lastAccessed:Date,
     owner:string
   }
 

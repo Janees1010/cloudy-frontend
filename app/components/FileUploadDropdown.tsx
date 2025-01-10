@@ -63,7 +63,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
     }));
     try {
       const response = await axios.post(
-        "http://localhost:4000/file/getPresignedUrl",
+        `${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/getPresignedUrl`,
         {
           files: filteredArray,
         }
@@ -127,7 +127,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
           let files = await uploadFileToS3(signedUrls, filteredFiles);
           axios
             .post(
-              "http://localhost:4000/folder/upload",
+              `${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/folder/upload`,
               {
                 files,
               },
@@ -174,7 +174,7 @@ const FileUploadModal = ({ dropdown, setIsOpenModal, setDropdown }: Props) => {
         if (uploadedFiles.length) {
           axios
             .post(
-              "http://localhost:4000/file/upload",
+              `${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/upload`,
               { file: uploadedFiles },
               {
                 params: {

@@ -38,7 +38,7 @@ const BinActionDropdown = ({ id, type, setBinFiles, name,setTotalDocumentCount }
   const handleRestore = async () => {
     try {
       const toastId = toast.loading("restoring ...")
-      const { data } = await axios.get("http://localhost:4000/file/restore", {
+      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/restore`, {
         params: { userId: user._id, type, id, name },
       });
       if (data) {

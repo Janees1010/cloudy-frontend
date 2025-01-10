@@ -23,7 +23,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose,id,type,name}) 
   // Mock API call to simulate fetching users
   const fetchUsers = async (query: string) => {
     // Simulate an API call delay
-    const {data}  =  await axios.get(`http://localhost:3500/user/search`,{params:{query,email:user.email}})
+    const {data}  =  await axios.get(`${process.env.NEXT_PUBLIC_USER_SERVER_URL}/user/search`,{params:{query,email:user.email}})
     console.log(data,"search");
     return data
   };
@@ -35,7 +35,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose,id,type,name}) 
         })
         console.log(receivers);
         console.log(name,"name");
-        const {data} = await axios.post("http://localhost:4000/file/share",{userId:user._id,id,receivers,type,name})
+        const {data} = await axios.post(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/share`,{userId:user._id,id,receivers,type,name})
         onClose()
         toast.success("successfully shared", { id: uploadToastId });
      } catch (error) {

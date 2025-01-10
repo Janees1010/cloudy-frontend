@@ -19,15 +19,16 @@ const Layout = ({ children }: LayoutProps) => {
 
   const FetchUserData = async () => {
     const user = await loadUserData();
+    console.log(user);
     if (!user) {
       router.push("/login");
+      console.log("redirect");
     } else {
       setLoading(false);
-    }
-    console.log(user, "cdh");
+    } 
   };
   useEffect(() => {
-    FetchUserData();
+      FetchUserData();
   }, [loadUserData]);
 
   if (loading) {
@@ -42,9 +43,11 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <main className="w-[80%] ml-[19%] overflow-y-auto">
-        <Navbar />
+        <div className="fixed z-50 w-[80%]">
+          <Navbar />
+        </div>
         <Toaster />
-        <div className="p-4 ">{children}</div>
+        <div className="my-10 p-5 overflow-y-auto ">{children}</div>
       </main>
     </section>
   );

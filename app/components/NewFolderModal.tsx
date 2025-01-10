@@ -26,7 +26,7 @@ const NewFolderModal = ({ setIsOpenModal }: Props) => {
     setIsOpenModal(false)
     const toastId = toast.loading("creating...")
     if(folderName){
-       axios.post("http://localhost:4000/folder/create",{name:folderName,userId:user._id,parentId}).then((res)=>{
+       axios.post(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/folder/create`,{name:folderName,userId:user._id,parentId}).then((res)=>{
         if(res.data){
            const payload = res.data.newFolder;
            dispatch(updateChildren(payload))

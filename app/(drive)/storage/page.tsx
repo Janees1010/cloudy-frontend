@@ -8,7 +8,7 @@ import { PiFileJs } from "react-icons/pi";
 import axios from "axios";
 import Loader from "@/app/components/Loader";
 
-const page = () => {
+const Page = () => {
   const user = useAppSelector((state) => state.user);
 
   const [files, setFiles] = useState<any>();
@@ -19,7 +19,7 @@ const page = () => {
 
   const fetchFilesAndStorage = useCallback(() => {
     axios
-      .get("http://localhost:4000/file/storage", {
+      .get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/storage`, {
         params: { userId: user._id, currentPage },
       })
       .then((res) => {
@@ -82,7 +82,7 @@ const page = () => {
             files.length &&
             files.map((file: any) => {
               return (
-                <tr className="border-b">
+                <tr key={file._id} className="border-b">
                   <td
                     // onClick={(e) =>
                     //   openFile(e, child._id, child.childrenType,child.s3Url)
@@ -124,4 +124,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

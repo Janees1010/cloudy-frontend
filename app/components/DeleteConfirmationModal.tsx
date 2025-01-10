@@ -17,7 +17,7 @@ type props = {
 const DeleteConfirmationModal = ({close,userId,type,id,setBinFiles,setTotalDocumentCount}:props) => {
      const handleDelete = ()=>{
       const toastId = toast.loading("deleting...")
-         axios.get("http://localhost:4000/file/delete",{params:{
+         axios.get(`${process.env.NEXT_PUBLIC_CLOUD_SERVER_URL}/file/delete`,{params:{
             userId,
             id,
             type

@@ -19,8 +19,7 @@ const Page = () => {
   });
 
   const googleAuth = () => {
-    console.log("Google Auth clicked");
-    window.open("http://localhost:3500/auth/google/callback", "_self");
+    window.open(`${process.env.NEXT_PUBLIC_USER_SERVER_URL}/auth/google/callback`, "_self");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +37,12 @@ const Page = () => {
       return;
     }
     console.log("Form submitted:", formData);
-    axios.post("http://localhost:3500/signin",{...formData}).then((res)=>{
+    axios.defaults.withCredentials = true
+    console.log(process.env.NEXT_PUBLIC_USER_SERVER_URL,"user server")
+    console.log(process.env.NEXT_PUBLIC_CLOUD_SERVER_URL,"cloud server")
+
+    axios.post(`http://51.20.144.82:3500/signin`,{...formData}).then((res)=>{
+         console.log(res.data);
          const payload = res.data.user
          dispatch(addUser(payload))
          router.push("/home")
